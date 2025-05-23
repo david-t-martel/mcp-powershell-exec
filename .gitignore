@@ -1,0 +1,30 @@
+# Python virtual environment
+.venv/
+venv/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Command history
+command_history/
+
+# VS Code
+.vscode/*
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/mcp.json
+!.vscode/settings.json
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db

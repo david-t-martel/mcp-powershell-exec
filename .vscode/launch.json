@@ -1,0 +1,42 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: MCP Server",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/server.py",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      }
+    },
+    {
+      "name": "Python: Run PowerShell Command",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/server.py",
+      "args": ["run", "Get-Process | Select-Object -First 5"],
+      "console": "integratedTerminal",
+      "justMyCode": false
+    },
+    {
+      "name": "Python: Run PowerShell Script",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/server.py",
+      "args": ["script", "${input:scriptPath}"],
+      "console": "integratedTerminal",
+      "justMyCode": false
+    }
+  ],
+  "inputs": [
+    {
+      "id": "scriptPath",
+      "type": "promptString",
+      "description": "Path to PowerShell script file",
+      "default": "example.ps1"
+    }
+  ]
+}

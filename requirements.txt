@@ -1,0 +1,29 @@
+# Project dependencies for MCP PowerShell Exec Server
+# Core MCP server dependencies
+mcp==1.9.1
+mcp-server==0.1.4
+fastmcp==2.4.0
+
+# API and web dependencies
+uvicorn==0.34.2
+starlette==0.46.2
+pydantic==2.11.5
+pydantic-core==2.33.2
+pydantic-settings==2.9.1
+python-dotenv==1.1.0
+python-multipart==0.0.20
+
+# HTTP and communication
+httpx==0.28.1
+httpx-sse==0.4.0
+httpcore==1.0.9
+websockets==15.0.1
+sse-starlette==2.3.5
+
+# Utilities
+typing-extensions==4.13.2
+click==8.1.8
+rich==14.0.0
+typer==0.15.4
+anyio==4.9.0
+sniffio==1.3.1

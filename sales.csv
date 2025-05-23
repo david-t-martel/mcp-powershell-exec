@@ -1,9 +1,24 @@
-"Region","State","Units","Price"
-"West","Texas","927","923.71"
-"North","Tennessee","466","770.67"
-"East","Florida","520","458.68"
-"East","Maine","828","661.24"
-"West","Virginia","465","53.58"
+Date,Product,Category,Amount,Customer
+2025-04-01,Laptop,Electronics,1299.99,John Smith
+2025-04-02,Monitor,Electronics,349.99,Sarah Johnson
+2025-04-03,Desk Chair,Furniture,189.50,Michael Brown
+2025-04-05,Coffee Maker,Appliances,79.99,Lisa Davis
+2025-04-05,Wireless Mouse,Electronics,29.99,Robert Wilson
+2025-04-07,Bookshelf,Furniture,249.99,Jennifer Moore
+2025-04-08,Blender,Appliances,59.95,David Taylor
+2025-04-10,Keyboard,Electronics,89.99,Jessica Anderson
+2025-04-11,Office Desk,Furniture,399.99,Brian Miller
+2025-04-12,Toaster,Appliances,45.50,Amanda White
+2025-04-15,Laptop,Electronics,1499.99,Chris Martin
+2025-04-17,Desk Chair,Furniture,199.99,Emily Thompson
+2025-04-18,Coffee Maker,Appliances,129.99,Kevin Jackson
+2025-04-20,Monitor,Electronics,279.99,Rachel Garcia
+2025-04-22,Wireless Mouse,Electronics,39.99,Steven Wright
+2025-04-24,Bookshelf,Furniture,199.99,Nicole Adams
+2025-04-25,Keyboard,Electronics,119.99,Daniel Lewis
+2025-04-27,Blender,Appliances,79.99,Michelle Rodriguez
+2025-04-28,Office Desk,Furniture,449.99,Joseph Clark
+2025-04-30,Laptop,Electronics,1199.99,Rebecca Scott
 "North","Missouri","436","235.67"
 "South","Kansas","214","992.47"
 "North","North Dakota","789","640.72"

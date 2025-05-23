@@ -1,11 +1,9 @@
 {
-    "servers": {
-        "powershell-integration": {
-            "command": "py",
-            "args": [
-                "d:/mygit/mcp-powershell-exec/server.py"
-            ],
-            "env": {}
-        }
+  "servers": {
+    "powershell-integration": {
+      "command": "uv",
+      "args": ["run", "$(workspaceFolder)/server.py"],
+      "env": {}
     }
+  }
 }
