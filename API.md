@@ -8,7 +8,24 @@ By default, the server runs at `http://localhost:8000/`
 
 ## Authentication
 
-Currently, the API doesn't require authentication. For security, it's recommended to only run the server on trusted networks.
+The API supports API key authentication. This can be enabled in the configuration:
+
+```json
+{
+  "security": {
+    "require_api_key": true,
+    "api_keys": ["your-secret-key-1", "your-secret-key-2"]
+  }
+}
+```
+
+When authentication is enabled, include the API key in your requests:
+
+```
+X-API-Key: your-secret-key-1
+```
+
+If no valid API key is provided, the server will respond with a `401 Unauthorized` error.
 
 ## Endpoints
 
