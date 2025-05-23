@@ -1,0 +1,39 @@
+# Default configuration file for MCP PowerShell Exec Server
+# Save as config.json or config.yaml and load with --config flag
+
+{
+  "app_name": "mcp-powershell-exec",
+  "security": {
+    "dangerous_patterns": [
+      "rm\\s+-Recurse",
+      "Remove-Item\\s+.*\\s+-Recurse",
+      "Format-Volume",
+      "Clear-Disk",
+      "Reset-ComputerMachinePassword",
+      "Invoke-Expression.*Invoke-WebRequest",
+      "Start-Process.*-Verb\\s+RunAs",
+      "New-Service",
+      "Stop-Service",
+      "Set-ExecutionPolicy\\s+Unrestricted"
+    ],
+    "api_keys": [
+      "EXAMPLE_API_KEY_1",
+      "EXAMPLE_API_KEY_2"
+    ],
+    "require_api_key": false,
+    "execution_policy": "Restricted"
+  },
+  "logging": {
+    "log_dir": "logs",
+    "log_level": "INFO",
+    "log_format": "text",
+    "command_history_dir": "command_history",
+    "enable_command_logging": true
+  },
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8000,
+    "cors_origins": ["*"],
+    "default_timeout": 30
+  }
+}

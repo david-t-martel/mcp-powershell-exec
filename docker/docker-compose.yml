@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  mcp-powershell-exec:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mcp-powershell-exec:latest
+    container_name: mcp-powershell-exec
+    ports:
+      - "8080:8080"
+    volumes:
+      # Mount configuration files
+      - ./config.json:/app/config.json:ro
+      # Mount logs directory for persistence
+      - ./logs:/app/logs
+      # Mount command history for persistence
+      - ./command_history:/app/command_history
+    environment:
+      # Environment variables override config file settings
+      - MCP_PWSH_SERVER__HOST=0.0.0.0
+      - MCP_PWSH_SERVER__PORT=8080
+      - MCP_PWSH_LOGGING__LOG_LEVEL=INFO
+      # Uncomment to enable API key authentication
+      # - MCP_PWSH_SECURITY__REQUIRE_API_KEY=true
+      # - MCP_PWSH_SECURITY__API_KEYS=your-secret-api-key
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    # Lower privileges
+    security_opt:
+      - no-new-privileges:true

@@ -1,0 +1,91 @@
+# filepath: c:\codedev\mcp_servers\mcp-powershell-exec\start-server.ps1
+# Script to activate the virtual environment and start the server with configuration
+
+param (
+    [string]$Config,
+    [string]$EnvFile,
+    [string]$ServerHost,
+    [int]$Port,
+    [string]$LogLevel,
+    [switch]$CheckPowerShell
+)
+
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$VenvDir = Join-Path -Path $ScriptDir -ChildPath '.venv'
+$ActivateScript = Join-Path -Path $VenvDir -ChildPath 'Scripts\Activate.ps1'
+$ServerScript = Join-Path -Path $ScriptDir -ChildPath 'server.py'
+
+# Check if PowerShell is available (optional check)
+if ($CheckPowerShell) {
+    Write-Host "Checking PowerShell availability..."
+    try {
+        $result = powershell.exe -Command "Write-Output 'PowerShell check'"
+        if ($result -ne "PowerShell check") {
+            Write-Error "PowerShell check failed"
+            exit 1
+        }
+    }
+    catch {
+        Write-Error "PowerShell is not available: $_"
+        exit 1
+    }
+}
+
+if (-not (Test-Path $VenvDir)) {
+    Write-Host 'Virtual environment not found. Setting up now...'
+    $InstallScript = Join-Path -Path $ScriptDir -ChildPath 'install_deps.ps1'
+    & $InstallScript
+    if (-not $?) {
+        Write-Error 'Failed to set up virtual environment. Please run install_deps.ps1 manually.'
+        exit 1
+    }
+} else {
+    # Activate the virtual environment
+    & $ActivateScript
+}
+
+# Build command arguments
+$serverArgs = @()
+
+if ($Config) {
+    $serverArgs += "--config"
+    $serverArgs += $Config
+}
+
+if ($EnvFile) {
+    $serverArgs += "--env-file"
+    $serverArgs += $EnvFile
+}
+
+if ($ServerHost) {
+    $serverArgs += "--host"
+    $serverArgs += $ServerHost
+}
+
+if ($Port) {
+    $serverArgs += "--port"
+    $serverArgs += $Port
+}
+
+if ($LogLevel) {
+    $serverArgs += "--log-level"
+    $serverArgs += $LogLevel
+}
+
+# Add any additional arguments passed to the script
+foreach ($arg in $args) {
+    $serverArgs += $arg
+}
+
+# Start the server
+Write-Host 'Starting MCP PowerShell Exec Server...'
+
+if (Get-Command uv -ErrorAction SilentlyContinue) {
+    # If UV is available, use it
+    Write-Host 'Using UV package manager...'
+    uv run $ServerScript @serverArgs
+} else {
+    # Otherwise use standard Python
+    Write-Host 'Using standard Python...'
+    python $ServerScript @serverArgs
+}

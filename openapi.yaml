@@ -1,0 +1,216 @@
+openapi: 3.0.3
+info:
+  title: MCP PowerShell Exec Server API
+  description: |-
+    API for executing PowerShell commands and scripts through an MCP-compatible server.
+    This server allows LLMs to interact with Windows PowerShell.
+  version: 1.0.0
+  contact:
+    email: support@example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+  - url: http://localhost:8000
+    description: Default development server
+  - url: https://your-deployed-server.example.com
+    description: Production server example (customize with your own URL)
+tags:
+  - name: tools
+    description: PowerShell execution tools
+  - name: resources
+    description: PowerShell documentation resources
+  - name: system
+    description: System endpoints
+security:
+  - ApiKeyAuth: []
+paths:
+  /mcp/tools/run_powershell:
+    post:
+      tags:
+        - tools
+      summary: Run a PowerShell command
+      description: Executes a PowerShell command and returns the output as text
+      operationId: runPowershell
+      requestBody:
+        description: PowerShell command and execution options
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RunPowershellRequest"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Process information:\nName    CPU\n----    ---\nChrome  10.5"
+        "400":
+          description: Invalid input
+        "401":
+          description: Unauthorized
+        "429":
+          description: Rate limit exceeded
+        "500":
+          description: Server error
+      security:
+        - ApiKeyAuth: []
+  /mcp/tools/run_powershell_formatted:
+    post:
+      tags:
+        - tools
+      summary: Run a PowerShell command with formatted output
+      description: Executes a PowerShell command and returns the output in specified format
+      operationId: runPowershellFormatted
+      requestBody:
+        description: PowerShell command and format options
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RunPowershellFormattedRequest"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            text/plain:
+              schema:
+                type: string
+            application/json:
+              schema:
+                type: object
+            application/xml:
+              schema:
+                type: string
+            text/csv:
+              schema:
+                type: string
+        "400":
+          description: Invalid input
+        "401":
+          description: Unauthorized
+        "429":
+          description: Rate limit exceeded
+        "500":
+          description: Server error
+      security:
+        - ApiKeyAuth: []
+  /mcp/tools/run_powershell_script:
+    post:
+      tags:
+        - tools
+      summary: Run a PowerShell script
+      description: Executes a PowerShell script from content and returns the output
+      operationId: runPowershellScript
+      requestBody:
+        description: PowerShell script content and arguments
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RunPowershellScriptRequest"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            text/plain:
+              schema:
+                type: string
+        "400":
+          description: Invalid input
+        "401":
+          description: Unauthorized
+        "429":
+          description: Rate limit exceeded
+        "500":
+          description: Server error
+      security:
+        - ApiKeyAuth: []
+  /health:
+    get:
+      tags:
+        - system
+      summary: Health check
+      description: Check the health status of the server
+      operationId: healthCheck
+      responses:
+        "200":
+          description: Health check results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthCheck"
+      security: [] # No security for health check
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+  schemas:
+    RunPowershellRequest:
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          type: string
+          description: The PowerShell code to execute
+          example: "Get-Process | Select-Object -First 5 Name, CPU"
+        timeout:
+          type: integer
+          format: int32
+          description: Maximum execution time in seconds
+          default: 30
+          example: 30
+    RunPowershellFormattedRequest:
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          type: string
+          description: The PowerShell code to execute
+          example: "Get-Process | Select-Object -First 5 Name, CPU"
+        format:
+          type: string
+          description: Output format
+          enum:
+            - text
+            - json
+            - xml
+            - csv
+          default: text
+          example: json
+    RunPowershellScriptRequest:
+      type: object
+      required:
+        - script_content
+      properties:
+        script_content:
+          type: string
+          description: The content of the PowerShell script
+          example: "param($Name)\nWrite-Output \"Hello, $Name!\""
+        args:
+          type: string
+          description: Arguments to pass to the script
+          default: ""
+          example: "World"
+    HealthCheck:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "healthy"
+        version:
+          type: string
+          example: "1.0.0"
+        powershell:
+          type: string
+          example: "OK"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2023-04-01T12:34:56.789Z"

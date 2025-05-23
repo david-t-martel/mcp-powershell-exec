@@ -1,0 +1,47 @@
+# Version control
+.git
+.gitignore
+
+# Python environment
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Editor settings
+.idea/
+*.swp
+*.swo
+
+# Local configuration
+.env
+config.json
+config.json.example
+.env.example
+
+# Logs
+logs/
+*.log
+command_history/
+
+# Docker
+.dockerignore
+Dockerfile
+docker-compose.yml
+
+# Documentation
+README.md
+LICENSE
+docs/
