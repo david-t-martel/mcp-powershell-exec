@@ -1,8 +1,97 @@
 {
-	"folders": [
-		{
-			"path": "."
-		}
-	],
-	"settings": {}
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    // Python settings
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.importFormat": "relative",
+    "python.formatting.provider": "black",
+    "python.formatting.blackPath": "${workspaceFolder}/.venv/Scripts/black",
+    "python.linting.enabled": true,
+    "python.linting.flake8Enabled": true,
+    "python.linting.flake8Path": "${workspaceFolder}/.venv/Scripts/flake8",
+    "python.linting.mypyEnabled": true,
+    "python.linting.mypyPath": "${workspaceFolder}/.venv/Scripts/mypy",
+    "python.linting.pylintEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.testing.nosetestsEnabled": false,
+    "python.testing.pytestPath": "${workspaceFolder}/.venv/Scripts/pytest",
+
+    // PowerShell settings
+    "powershell.powerShellDefaultVersion": "PowerShell",
+    "powershell.scriptAnalysis.enable": true,
+    "powershell.codeFormatting.autoCorrectAliases": true,
+    "powershell.codeFormatting.useCorrectCasing": true,
+
+    // Editor settings
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": true
+    },
+    "editor.rulers": [88, 100],
+    "editor.renderWhitespace": "boundary",
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+
+    // Terminal settings
+    "terminal.integrated.defaultProfile.windows": "PowerShell",
+
+    // File associations
+    "files.associations": {
+      "*.ps1": "powershell",
+      "*.psm1": "powershell",
+      "*.psd1": "powershell"
+    },
+
+    // MCP settings
+    "mcp.enableLanguageServer": true,
+    "mcp.enableModelProviders": true,
+
+    // Git settings
+    "git.enableSmartCommit": true,
+    "git.confirmSync": false,
+
+    // Exclude files from explorer
+    "files.exclude": {
+      "**/__pycache__": true,
+      "**/*.pyc": true,
+      ".venv": false,
+      "**/.pytest_cache": true
+    },
+
+    // Search settings
+    "search.exclude": {
+      "**/__pycache__": true,
+      "**/*.pyc": true,
+      ".venv": true,
+      "**/.pytest_cache": true
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-python.python",
+      "ms-python.vscode-pylance",
+      "ms-python.black-formatter",
+      "ms-python.flake8",
+      "ms-python.isort",
+      "ms-python.mypy-type-checker",
+      "ms-vscode.powershell",
+      "tamasfe.even-better-toml",
+      "njpwerner.autodocstring",
+      "streetsidesoftware.code-spell-checker",
+      "eamodio.gitlens",
+      "github.vscode-github-actions"
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": []
+  }
 }
