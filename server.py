@@ -1,7 +1,9 @@
 import argparse
 import os
 import re
+import subprocess
 import sys
+import tempfile
 from datetime import datetime
 
 from mcp.server.fastmcp import FastMCP
@@ -54,8 +56,6 @@ def run_powershell(code: str, timeout: int = 30) -> str:
         code: The PowerShell code to execute
         timeout: Maximum execution time in seconds (default: 30)
     """
-    import subprocess
-
     # Check for security issues
     is_safe, security_msg = check_security(code)
     if not is_safe:
@@ -64,7 +64,7 @@ def run_powershell(code: str, timeout: int = 30) -> str:
     try:
         # Log the command
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        with open(f"command_history/cmd_{timestamp}.txt", "w") as f:
+        with open(f"command_history/cmd_{timestamp}.txt", "w", encoding="utf-8") as f:
             f.write(f"Command executed at {datetime.now()}:\n{code}\n")
 
         # Run the PowerShell command with timeout
@@ -88,35 +88,35 @@ def run_powershell(code: str, timeout: int = 30) -> str:
 
 
 @mcp.tool()
-def run_powershell_formatted(code: str, format: str = "text") -> str:
+def run_powershell_formatted(code: str, output_format: str = "text") -> str:
     """Runs PowerShell code and returns the output in specified format.
 
     Args:
         code: The PowerShell code to execute
-        format: Output format (text, json, xml, csv)
+        output_format: Output format (text, json, xml, csv)
     """
-    import subprocess
-
     # Check for security issues
     is_safe, security_msg = check_security(code)
     if not is_safe:
         return f"Error: {security_msg}"
 
     format_cmd = ""
-    if format.lower() == "json":
+    if output_format.lower() == "json":
         format_cmd = " | ConvertTo-Json"
-    elif format.lower() == "xml":
+    elif output_format.lower() == "xml":
         format_cmd = " | ConvertTo-Xml -As String"
-    elif format.lower() == "csv":
+    elif output_format.lower() == "csv":
         format_cmd = " | ConvertTo-Csv"
-    elif format.lower() not in ["text", ""]:
-        return f"Error: Unknown format '{format}'. Supported: text, json, xml, csv"
+    elif output_format.lower() not in ["text", ""]:
+        return (
+            f"Error: Unknown format '{output_format}'. Supported: text, json, xml, csv"
+        )
 
     full_command = code + format_cmd
 
     # Log the command
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    with open(f"command_history/cmd_{timestamp}.txt", "w") as f:
+    with open(f"command_history/cmd_{timestamp}.txt", "w", encoding="utf-8") as f:
         f.write(f"Formatted command executed at {datetime.now()}:\n{full_command}\n")
 
     # Run the PowerShell command
@@ -149,23 +149,21 @@ def run_powershell_script(script_content: str, args: str = "") -> str:
         script_content: The content of the PowerShell script
         args: Arguments to pass to the script
     """
-    import os
-    import subprocess
-    import tempfile
-
     # Check for security issues
     is_safe, security_msg = check_security(script_content)
     if not is_safe:
         return f"Error: {security_msg}"
 
     # Create a temporary script file
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".ps1", mode="w") as temp:
+    with tempfile.NamedTemporaryFile(
+        delete=False, suffix=".ps1", mode="w", encoding="utf-8"
+    ) as temp:
         temp.write(script_content)
         script_path = temp.name
 
     # Log the script
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    with open(f"command_history/script_{timestamp}.ps1", "w") as f:
+    with open(f"command_history/script_{timestamp}.ps1", "w", encoding="utf-8") as f:
         f.write(f"Script executed at {datetime.now()}:\n{script_content}\n")
         if args:
             f.write(f"Arguments: {args}\n")
@@ -231,6 +229,7 @@ def parse_arguments():
     fmt_parser.add_argument("code", help="PowerShell code to execute")
     fmt_parser.add_argument(
         "--format",
+        dest="output_format",
         choices=["text", "json", "xml", "csv"],
         default="text",
         help="Output format",
@@ -253,7 +252,7 @@ def run_command_line():
     if args.command == "run":
         # Run a simple command
         if os.path.isfile(args.code):
-            with open(args.code, "r") as f:
+            with open(args.code, "r", encoding="utf-8") as f:
                 code = f.read()
         else:
             code = args.code
@@ -264,12 +263,12 @@ def run_command_line():
     elif args.command == "format":
         # Run with formatted output
         if os.path.isfile(args.code):
-            with open(args.code, "r") as f:
+            with open(args.code, "r", encoding="utf-8") as f:
                 code = f.read()
         else:
             code = args.code
 
-        result = run_powershell_formatted(code, args.format)
+        result = run_powershell_formatted(code, args.output_format)
         print(result)
 
     elif args.command == "script":
@@ -278,7 +277,7 @@ def run_command_line():
             print(f"Error: Script file '{args.file}' not found")
             sys.exit(1)
 
-        with open(args.file, "r") as f:
+        with open(args.file, "r", encoding="utf-8") as f:
             script_content = f.read()
             result = run_powershell_script(script_content, args.args)
             print(result)

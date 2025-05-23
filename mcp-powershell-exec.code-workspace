@@ -10,18 +10,18 @@
     "python.analysis.typeCheckingMode": "basic",
     "python.analysis.autoImportCompletions": true,
     "python.analysis.importFormat": "relative",
-    "python.formatting.provider": "black",
-    "python.formatting.blackPath": "${workspaceFolder}/.venv/Scripts/black",
+    // Using language-specific formatters instead of deprecated python.formatting.provider
+    "[python]": {
+      "editor.defaultFormatter": "ms-python.black-formatter",
+      "editor.formatOnSave": true
+    },
     "python.linting.enabled": true,
     "python.linting.flake8Enabled": true,
-    "python.linting.flake8Path": "${workspaceFolder}/.venv/Scripts/flake8",
     "python.linting.mypyEnabled": true,
-    "python.linting.mypyPath": "${workspaceFolder}/.venv/Scripts/mypy",
     "python.linting.pylintEnabled": false,
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
     "python.testing.nosetestsEnabled": false,
-    "python.testing.pytestPath": "${workspaceFolder}/.venv/Scripts/pytest",
 
     // PowerShell settings
     "powershell.powerShellDefaultVersion": "PowerShell",
@@ -32,7 +32,7 @@
     // Editor settings
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
-      "source.organizeImports": true
+      "source.organizeImports": "explicit"
     },
     "editor.rulers": [88, 100],
     "editor.renderWhitespace": "boundary",
@@ -50,9 +50,10 @@
       "*.psd1": "powershell"
     },
 
-    // MCP settings
-    "mcp.enableLanguageServer": true,
-    "mcp.enableModelProviders": true,
+    // MCP extension settings
+    // Note: If these settings continue to show as unknown, the MCP extension may need to be installed
+    "modelContextProtocol.enableLanguageServer": true,
+    "modelContextProtocol.enableModelProviders": true,
 
     // Git settings
     "git.enableSmartCommit": true,
@@ -76,22 +77,26 @@
   },
   "extensions": {
     "recommendations": [
+      // Python extensions
       "ms-python.python",
       "ms-python.vscode-pylance",
       "ms-python.black-formatter",
       "ms-python.flake8",
       "ms-python.isort",
       "ms-python.mypy-type-checker",
+
+      // PowerShell support
       "ms-vscode.powershell",
+
+      // Utility extensions
       "tamasfe.even-better-toml",
       "njpwerner.autodocstring",
       "streetsidesoftware.code-spell-checker",
       "eamodio.gitlens",
-      "github.vscode-github-actions"
+      "github.vscode-github-actions",
+
+      // MCP extension - add the correct ID if available
+      "modelcontextprotocol.mcp-extension"
     ]
-  },
-  "launch": {
-    "version": "0.2.0",
-    "configurations": []
   }
 }
