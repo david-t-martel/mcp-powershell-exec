@@ -12,6 +12,7 @@ def register_resources(mcp: FastMCP):
     mcp.resource(
         name="powershell_command_syntax",
         description="Common PowerShell command syntax reference",
+        uri="/powershell/syntax",
         content="""
 # PowerShell Command Syntax Reference
 
@@ -41,6 +42,8 @@ def register_resources(mcp: FastMCP):
 
 - **Get-ChildItem**: List files and folders (like ls or dir)
   ```powershell
+  Get-ChildItem -Path C:\\Windows -Filter *.exe -Recurse `
+    -ErrorAction SilentlyContinue
   Get-ChildItem -Path C:\\Windows -Filter *.exe -Recurse -ErrorAction SilentlyContinue
   ```
 
@@ -131,15 +134,15 @@ def register_resources(mcp: FastMCP):
   Invoke-Command -ComputerName "Server01" -ScriptBlock {Get-Service}
   ```
 """,
-    )
 
-    # PowerShell scripting examples
     mcp.resource(
         name="powershell_scripting_examples",
         description="Examples of PowerShell scripts for common tasks",
+        uri="/powershell/examples",
         content="""
 # PowerShell Scripting Examples
 
+## Basic Script Structure
 ## Basic Script Structure
 
 ```powershell
@@ -292,15 +295,15 @@ $response = Invoke-RestMethod -Uri "https://api.example.com/users" `
 Write-Output "Created user with ID: $($response.id)"
 ```
 """,
+    mcp.resource(
+"""
     )
 
-    # PowerShell best practices
     mcp.resource(
         name="powershell_best_practices",
         description="Best practices for PowerShell scripting",
+        uri="/powershell/best-practices",
         content="""
-# PowerShell Best Practices
-
 ## Naming Conventions
 
 - **Use approved verbs**: PowerShell has a specific set of approved verbs
@@ -478,18 +481,18 @@ Write-Output "Created user with ID: $($response.id)"
   ```powershell
   $securePassword = Read-Host -AsSecureString "Enter password"
   $credential = New-Object System.Management.Automation.PSCredential ($username, $securePassword)
-  ```
-""",
+    $securePassword = Read-Host -AsSecureString "Enter password"
+    $credential = New-Object System.Management.Automation.PSCredential ($username, $securePassword)
+    ```
+  """
     )
 
-    # Add PowerShell common tasks for LLMs
     mcp.resource(
         name="powershell_examples_for_llms",
         description="Examples of PowerShell commands specifically formatted for LLM consumption",
-        content="""
-# PowerShell Examples for LLMs
-
-## System Information Queries
+        uri="/powershell/llm-examples",
+          uri="/powershell/llm-examples",
+          content="""
 
 ### Get Basic System Information
 ```powershell
@@ -577,22 +580,9 @@ $object.name
 ```
 
 ### Working with CSV
-```powershell
 Get-Process | Select-Object Name, Id, CPU | Export-Csv -Path 'processes.csv' -NoTypeInformation
 $data = Import-Csv -Path 'processes.csv'
-```
-""",
-    )
-
-    # Add PowerShell API Integration schema examples
-    mcp.resource(
-        name="powershell_api_response_schemas",
-        description="Examples of PowerShell output formats that can be used by LLMs for parsing",
-        content="""
-# PowerShell API Response Schema Examples
-
-## JSON Output Schemas
-
+$data = Import-Csv -Path 'processes.csv'
 ### Process Information
 ```powershell
 Get-Process | Select-Object Name, Id, CPU, WorkingSet | ConvertTo-Json
@@ -701,5 +691,12 @@ Parsing tip: Each line represents an object, columns are separated by whitespace
 """,
     )
 
-    return True
-    return True
+""",
+    )
+
+    mcp.resource(
+        name="powershell_api_response_schemas",
+        description="Examples of PowerShell output formats that can be used by LLMs for parsing",
+        uri="/powershell/api-schemas",
+        content="""
+### Process Information
