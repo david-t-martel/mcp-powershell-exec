@@ -487,3 +487,142 @@ if __name__ == "__main__":
 
     # If arguments are provided, run in command line mode
     run_command_line()
+        command = arguments.get("command", "")
+        
+        if not command.strip():
+            return [TextContent(
+                type="text",
+                text="Error: Command cannot be empty"
+            )]
+        
+        is_safe, message = self.executor._check_security(command)
+        
+        response = {
+            "tool": "test_powershell_safety",
+            "command": command,
+            "is_safe": is_safe,
+            "message": message if message else "Command passed security checks",
+            "checks_performed": [
+                "Command length validation",
+                "Blocked command detection", 
+                "Dangerous pattern detection"
+            ]
+        }
+        
+        return [TextContent(
+            type="text",
+            text=json.dumps(response, indent=2)
+        )]
+    
+    async def run_stdio(self):
+        """Run the server with stdio transport for MCP clients."""
+        async with stdio_server() as (read_stream, write_stream):
+            await self.server.run(
+                read_stream,
+                write_stream,
+                InitializationOptions(
+                    server_name="powershell-exec",
+                    server_version="1.0.0",
+                    capabilities=self.server.get_capabilities(
+                        notification_options=NotificationOptions(),
+                        experimental_capabilities={}
+                    )
+                )
+            )
+
+
+async def main():
+    """Main entry point for the MCP server."""
+    parser = argparse.ArgumentParser(description="MCP PowerShell Execution Server")
+    
+    # Configuration arguments
+    parser.add_argument("--config", help="Path to configuration file")
+    parser.add_argument("--env-file", help="Path to .env file")
+    parser.add_argument("--log-level", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"], 
+                       help="Logging level")
+    
+    # Server mode arguments
+    parser.add_argument("--stdio", action="store_true", default=True,
+                       help="Run in stdio mode for MCP clients (default)")
+    
+    # CLI command arguments  
+    parser.add_argument("--execute", help="Execute a PowerShell command directly")
+    parser.add_argument("--format", choices=["text", "json", "xml", "csv"], default="text",
+                       help="Output format for direct execution")
+    parser.add_argument("--timeout", type=int, help="Execution timeout in seconds")
+    
+    args = parser.parse_args()
+    
+    # Initialize configuration
+    config_overrides = {}
+    if args.log_level:
+        config_overrides["logging.log_level"] = args.log_level
+    
+    config = initialize_config(
+        config_file=args.config,
+        env_file=args.env_file,
+        **config_overrides
+    )
+    
+    # Validate configuration
+    issues = validate_config(config)
+    if issues:
+        print("Configuration issues found:", file=sys.stderr)
+        for issue in issues:
+            print(f"  - {issue}", file=sys.stderr)
+        sys.exit(1)
+    
+    # Setup logging
+    setup_logging(
+        log_level=config.logging.log_level,
+        log_format=config.logging.log_format,
+        log_dir=config.logging.log_dir,
+        app_name=config.app_name
+    )
+    
+    logger = get_logger("main")
+    
+    # Check PowerShell availability
+    try:
+        result = subprocess.run(
+            ["powershell.exe", "-Command", "echo 'PowerShell Available'"],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        if result.returncode != 0:
+            logger.error("PowerShell is not available or not working properly")
+            sys.exit(1)
+    except Exception as e:
+        logger.error(f"PowerShell check failed: {e}")
+        sys.exit(1)
+    
+    # Handle direct command execution
+    if args.execute:
+        executor = PowerShellExecutor(config)
+        result = executor.execute_command(args.execute, args.timeout, args.format)
+        
+        if result["success"]:
+            print(result["stdout"])
+            sys.exit(0)
+        else:
+            print(f"Error: {result['error']}", file=sys.stderr)
+            if result["stderr"]:
+                print(result["stderr"], file=sys.stderr)
+            sys.exit(result.get("exit_code", 1))
+    
+    # Run MCP server
+    logger.info("Starting MCP PowerShell Server in stdio mode")
+    server = MCPPowerShellServer(config)
+    
+    try:
+        await server.run_stdio()
+    except KeyboardInterrupt:
+        logger.info("Server stopped by user")
+    except Exception as e:
+        logger.exception("Server error")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

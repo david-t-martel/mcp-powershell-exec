@@ -1,0 +1,160 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mcp-powershell-exec"
+version = "1.0.0"
+description = "MCP Server for executing PowerShell scripts securely"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "David T. Martel", email = "david.martel@auricleinc.com"}
+]
+maintainers = [
+    {name = "David T. Martel", email = "david.martel@auricleinc.com"}
+]
+keywords = ["mcp", "powershell", "automation", "server", "claude"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators", 
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: System :: Systems Administration",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "mcp>=1.9.1",
+    "mcp-server>=0.1.4",
+    "fastmcp>=2.4.0",
+    "uvicorn>=0.34.2",
+    "starlette>=0.46.2",
+    "pydantic>=2.11.5",
+    "pydantic-settings>=2.9.1",
+    "python-dotenv>=1.1.0",
+    "python-multipart>=0.0.20",
+    "httpx>=0.28.1",
+    "click>=8.1.8",
+    "rich>=14.0.0",
+    "typer>=0.15.4",
+    "pyyaml>=6.0.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "mypy>=1.5.0",
+    "black>=23.7.0",
+    "isort>=5.12.0",
+    "flake8>=6.0.0",
+    "pre-commit>=3.3.0",
+]
+docs = [
+    "mkdocs>=1.5.0",
+    "mkdocs-material>=9.1.0",
+    "mkdocstrings[python]>=0.22.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/david-t-martel/mcp-powershell-exec"
+Documentation = "https://github.com/david-t-martel/mcp-powershell-exec#readme"
+Repository = "https://github.com/david-t-martel/mcp-powershell-exec.git"
+Issues = "https://github.com/david-t-martel/mcp-powershell-exec/issues"
+Changelog = "https://github.com/david-t-martel/mcp-powershell-exec/releases"
+
+[project.scripts]
+mcp-powershell-exec = "mcp_powershell_exec.server:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["mcp_powershell_exec*"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.black]
+line-length = 88
+target-version = ['py310']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+known_first_party = ["mcp_powershell_exec"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = ["uvicorn.*", "fastmcp.*", "mcp.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = [
+    "-ra",
+    "--strict-config",
+    "--strict-markers",
+    "--cov=mcp_powershell_exec",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError", 
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
