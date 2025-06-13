@@ -1,102 +1,24 @@
 {
-  "folders": [
-    {
-      "path": "."
-    }
-  ],
-  "settings": {
-    // Python settings
-    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
-    "python.analysis.typeCheckingMode": "basic",
-    "python.analysis.autoImportCompletions": true,
-    "python.analysis.importFormat": "relative",
-    // Using language-specific formatters instead of deprecated python.formatting.provider
-    "[python]": {
-      "editor.defaultFormatter": "ms-python.black-formatter",
-      "editor.formatOnSave": true
-    },
-    "python.linting.enabled": true,
-    "python.linting.flake8Enabled": true,
-    "python.linting.mypyEnabled": true,
-    "python.linting.pylintEnabled": false,
-    "python.testing.pytestEnabled": true,
-    "python.testing.unittestEnabled": false,
-    "python.testing.nosetestsEnabled": false,
-
-    // PowerShell settings
-    "powershell.powerShellDefaultVersion": "PowerShell",
-    "powershell.scriptAnalysis.enable": true,
-    "powershell.codeFormatting.autoCorrectAliases": true,
-    "powershell.codeFormatting.useCorrectCasing": true,
-
-    // Editor settings
-    "editor.formatOnSave": true,
-    "editor.codeActionsOnSave": {
-      "source.organizeImports": "explicit"
-    },
-    "editor.rulers": [88, 100],
-    "editor.renderWhitespace": "boundary",
-    "files.trimTrailingWhitespace": true,
-    "files.insertFinalNewline": true,
-    "files.trimFinalNewlines": true,
-
-    // Terminal settings
-    "terminal.integrated.defaultProfile.windows": "PowerShell",
-
-    // File associations
-    "files.associations": {
-      "*.ps1": "powershell",
-      "*.psm1": "powershell",
-      "*.psd1": "powershell"
-    },
-
-    // MCP extension settings
-    // Note: If these settings continue to show as unknown, the MCP extension may need to be installed
-    "modelContextProtocol.enableLanguageServer": true,
-    "modelContextProtocol.enableModelProviders": true,
-
-    // Git settings
-    "git.enableSmartCommit": true,
-    "git.confirmSync": false,
-
-    // Exclude files from explorer
-    "files.exclude": {
-      "**/__pycache__": true,
-      "**/*.pyc": true,
-      ".venv": false,
-      "**/.pytest_cache": true
-    },
-
-    // Search settings
-    "search.exclude": {
-      "**/__pycache__": true,
-      "**/*.pyc": true,
-      ".venv": true,
-      "**/.pytest_cache": true
-    }
-  },
-  "extensions": {
-    "recommendations": [
-      // Python extensions
-      "ms-python.python",
-      "ms-python.vscode-pylance",
-      "ms-python.black-formatter",
-      "ms-python.flake8",
-      "ms-python.isort",
-      "ms-python.mypy-type-checker",
-
-      // PowerShell support
-      "ms-vscode.powershell",
-
-      // Utility extensions
-      "tamasfe.even-better-toml",
-      "njpwerner.autodocstring",
-      "streetsidesoftware.code-spell-checker",
-      "eamodio.gitlens",
-      "github.vscode-github-actions",
-
-      // MCP extension - add the correct ID if available
-      "modelcontextprotocol.mcp-extension"
-    ]
-  }
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../python-sdk"
+		}
+	],
+	"settings": {
+		"powershell.powerShellDefaultVersion": "PowerShell",
+		"powershell.scriptAnalysis.enable": true,
+		"powershell.codeFormatting.autoCorrectAliases": true,
+		"powershell.codeFormatting.useCorrectCasing": true,
+		"terminal.integrated.defaultProfile.windows": "PowerShell",
+		"files.associations": {
+			"*.ps1": "powershell",
+			"*.psm1": "powershell",
+			"*.psd1": "powershell"
+		},
+		"git.confirmSync": false,
+		"powershell.cwd": "mcp-powershell-exec"
+	}
 }
