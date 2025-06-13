@@ -14,6 +14,11 @@ import os
 from pathlib import Path
 from typing import List, Optional, Union
 
+try:
+    import yaml  # type: ignore[import-untyped]
+except ImportError:
+    yaml = None
+
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -150,87 +155,110 @@ class Config(BaseSettings):
         """Load configuration from a JSON or YAML file"""
         file_path = Path(file_path)
         if not file_path.exists():
-            logger.warning(f"Configuration file not found: {file_path}")
+            logger.warning("Configuration file not found: %s", file_path)
             return cls()
 
         try:
-            with open(file_path, "r") as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 if file_path.suffix.lower() in (".yml", ".yaml"):
-                    try:
-                        import yaml
-
+                    if yaml is not None:
                         config_data = yaml.safe_load(f)
-                    except ImportError:
+                    else:
                         logger.warning("PyYAML not installed, falling back to JSON")
                         config_data = json.load(f)
                 else:
                     config_data = json.load(f)
 
             return cls(**config_data)
-        except Exception as e:
-            logger.error(f"Error loading configuration from {file_path}: {e}")
+        except (FileNotFoundError, PermissionError, OSError) as e:
+            logger.error("Error loading configuration from %s: %s", file_path, e)
             return cls()
 
 
-# Global configuration instance
-config = Config()
+class ConfigManager:
+    """Configuration manager singleton"""
+
+    _instance: Optional[Config] = None
+
+    @classmethod
+    def get_instance(cls) -> Config:
+        """Get the configuration instance"""
+        if cls._instance is None:
+            cls._instance = Config()
+        return cls._instance
+
+    @classmethod
+    def set_instance(cls, config: Config) -> None:
+        """Set the configuration instance"""
+        cls._instance = config
 
 
 def initialize_config(
-    config_file: Optional[str] = None, env_file: Optional[str] = None, **overrides
+    config_file: Optional[str] = None,
+    env_file: Optional[str] = None,
+    **overrides: Union[str, int, bool, List[str]],
 ) -> Config:
     """Initialize configuration with optional file and overrides"""
-    global config
-
     # Load from environment file if specified
     if env_file:
         os.environ["SETTINGS_ENV_FILE"] = env_file
 
     # Start with environment variables and defaults
-    config = Config()
+    config_instance = Config()
 
     # Load from config file if specified
     if config_file and os.path.exists(config_file):
         file_config = Config.load_from_file(config_file)
         for key, value in file_config.model_dump().items():
-            setattr(config, key, value)
+            setattr(config_instance, key, value)
 
     # Apply any direct overrides
     for key, value in overrides.items():
-        if hasattr(config, key):
-            setattr(config, key, value)
+        if hasattr(config_instance, key):
+            setattr(config_instance, key, value)
 
     # Create log directory if needed
-    if not os.path.exists(config.logging.log_dir):
-        os.makedirs(config.logging.log_dir, exist_ok=True)
+    # Pydantic v2 nested model access may trigger false mypy warnings
+    logging_config = config_instance.logging
+    log_dir = getattr(logging_config, "log_dir", "logs")
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir, exist_ok=True)
 
     # Create command history directory if needed
-    if config.logging.enable_command_logging:
-        os.makedirs(config.logging.command_history_dir, exist_ok=True)
+    enable_cmd_logging = getattr(logging_config, "enable_command_logging", True)
+    if enable_cmd_logging:
+        cmd_history_dir = getattr(
+            logging_config, "command_history_dir", "command_history"
+        )
+        os.makedirs(cmd_history_dir, exist_ok=True)
 
-    return config
+    # Store in the manager
+    ConfigManager.set_instance(config_instance)
+    return config_instance
 
 
 def get_config() -> Config:
     """Get the current configuration instance"""
-    return config
+    return ConfigManager.get_instance()
 
 
-def validate_config(config: Config) -> List[str]:
+def validate_config(config_instance: Config) -> List[str]:
     """Validate configuration and return list of issues"""
     issues = []
 
     # Validate logging directory
     try:
-        os.makedirs(config.logging.log_dir, exist_ok=True)
-    except Exception as e:
-        issues.append(f"Cannot create log directory '{config.logging.log_dir}': {e}")
+        os.makedirs(config_instance.logging.log_dir, exist_ok=True)
+    except (OSError, PermissionError) as e:
+        issues.append(
+            f"Cannot create log directory '{config_instance.logging.log_dir}': {e}"
+        )
 
     # Validate log level
     valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
-    if config.logging.log_level.upper() not in valid_levels:
+    if config_instance.logging.log_level.upper() not in valid_levels:
         issues.append(
-            f"Invalid log level '{config.logging.log_level}'. "
+            f"Invalid log level '{config_instance.logging.log_level}'. "
             f"Must be one of: {', '.join(valid_levels)}"
         )
 
@@ -243,18 +271,18 @@ def validate_config(config: Config) -> List[str]:
         "Bypass",
         "Undefined",
     ]
-    if config.security.execution_policy not in valid_policies:
+    if config_instance.security.execution_policy not in valid_policies:
         issues.append(
-            f"Invalid execution policy '{config.security.execution_policy}'. "
+            f"Invalid execution policy '{config_instance.security.execution_policy}'. "
             f"Must be one of: {', '.join(valid_policies)}"
         )
 
     # Validate timeout
-    if config.security.command_timeout <= 0:
+    if config_instance.security.command_timeout <= 0:
         issues.append("Command timeout must be greater than 0")
 
     # Validate max command length
-    if config.security.max_command_length <= 0:
+    if config_instance.security.max_command_length <= 0:
         issues.append("Max command length must be greater than 0")
 
     return issues

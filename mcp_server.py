@@ -34,13 +34,16 @@ class PowerShellExecutor:
         self.config = config
         self.logger = get_logger("powershell.executor")
 
-    def _check_security(self, code: str) -> tuple[bool, str]:
+    def check_security(self, code: str) -> tuple[bool, str]:
         """Check if PowerShell code is safe to execute."""
         # Check command length
         if len(code) > self.config.security.max_command_length:
             return (
                 False,
-                f"Command too long (max {self.config.security.max_command_length} chars)",
+                (
+                    f"Command too long (max "
+                    f"{self.config.security.max_command_length} chars)"
+                ),
             )
 
         # Check for blocked commands
@@ -61,9 +64,9 @@ class PowerShellExecutor:
     ) -> dict:
         """Execute PowerShell command with security checks and formatting."""
         # Security validation
-        is_safe, error_msg = self._check_security(code)
+        is_safe, error_msg = self.check_security(code)
         if not is_safe:
-            self.logger.warning(f"Security check failed: {error_msg}")
+            self.logger.warning("Security check failed: %s", error_msg)
             return {
                 "success": False,
                 "error": error_msg,
@@ -110,7 +113,9 @@ class PowerShellExecutor:
             execution_time = time.time() - start_time
 
             self.logger.info(
-                f"Command executed in {execution_time:.2f}s with exit code {process.returncode}"
+                "Command executed in %.2fs with exit code %d",
+                execution_time,
+                process.returncode,
             )
 
             return {
@@ -137,7 +142,7 @@ class PowerShellExecutor:
                 "execution_time": round(execution_time, 2),
             }
 
-        except Exception as e:
+        except (subprocess.CalledProcessError, OSError) as e:
             execution_time = time.time() - start_time
             error_msg = f"Execution failed: {str(e)}"
             self.logger.exception("PowerShell execution error")
@@ -161,10 +166,10 @@ class MCPPowerShellServer:
         self.logger = get_logger("mcp.server")
 
         # Initialize MCP server
-        self.server = Server("powershell-exec")
+        self.server: Server = Server("powershell-exec")
         self._setup_handlers()
 
-    def _setup_handlers(self):
+    def _setup_handlers(self) -> None:
         """Set up MCP server handlers."""
 
         @self.server.list_tools()
@@ -173,13 +178,18 @@ class MCPPowerShellServer:
             return [
                 Tool(
                     name="execute_powershell",
-                    description="Execute PowerShell commands securely with output formatting options",
+                    description=(
+                        "Execute PowerShell commands securely with "
+                        "output formatting options"
+                    ),
                     inputSchema={
                         "type": "object",
                         "properties": {
                             "command": {
                                 "type": "string",
-                                "description": "PowerShell command or script to execute",
+                                "description": (
+                                    "PowerShell command or script to execute"
+                                ),
                             },
                             "timeout": {
                                 "type": "integer",
@@ -252,8 +262,8 @@ class MCPPowerShellServer:
                 else:
                     raise ValueError(f"Unknown tool: {name}")
 
-            except Exception as e:
-                self.logger.exception(f"Tool execution error: {name}")
+            except (ValueError, TypeError, KeyError) as e:
+                self.logger.exception("Tool execution error: %s", name)
                 return [
                     TextContent(
                         type="text", text=f"Error executing tool '{name}': {str(e)}"
@@ -304,7 +314,7 @@ class MCPPowerShellServer:
             # Clean up temp file
             try:
                 os.unlink(script_path)
-            except:
+            except (OSError, PermissionError):
                 pass  # Ignore cleanup errors
 
             response = {
@@ -316,7 +326,7 @@ class MCPPowerShellServer:
 
             return [TextContent(type="text", text=json.dumps(response, indent=2))]
 
-        except Exception as e:
+        except (OSError, PermissionError, ValueError) as e:
             return [TextContent(type="text", text=f"Error executing script: {str(e)}")]
 
     async def _handle_test_safety(self, arguments: dict) -> List[TextContent]:
@@ -326,7 +336,7 @@ class MCPPowerShellServer:
         if not command.strip():
             return [TextContent(type="text", text="Error: Command cannot be empty")]
 
-        is_safe, message = self.executor._check_security(command)
+        is_safe, message = self.executor.check_security(command)
 
         response = {
             "tool": "test_powershell_safety",
@@ -342,12 +352,12 @@ class MCPPowerShellServer:
 
         return [TextContent(type="text", text=json.dumps(response, indent=2))]
 
-    async def run_stdio(self):
+    async def run_stdio(self) -> None:
         """Run the server with stdio transport for MCP clients."""
-        async with stdio_server() as (read_stream, write_stream):
+        async with stdio_server() as streams:
             await self.server.run(
-                read_stream,
-                write_stream,
+                streams[0],
+                streams[1],
                 InitializationOptions(
                     server_name="powershell-exec",
                     server_version="1.0.0",
@@ -359,7 +369,7 @@ class MCPPowerShellServer:
             )
 
 
-async def main():
+async def main() -> None:
     """Main entry point for the MCP server."""
     parser = argparse.ArgumentParser(description="MCP PowerShell Execution Server")
 
@@ -410,10 +420,11 @@ async def main():
         sys.exit(1)
 
     # Setup logging
+    logging_config = config.logging
     setup_logging(
-        log_level=config.logging.log_level,
-        log_format=config.logging.log_format,
-        log_dir=config.logging.log_dir,
+        log_level=getattr(logging_config, "log_level", "INFO"),
+        log_format=getattr(logging_config, "log_format", "text"),
+        log_dir=getattr(logging_config, "log_dir", "logs"),
         app_name=config.app_name,
     )
 
@@ -421,32 +432,33 @@ async def main():
 
     # Check PowerShell availability
     try:
-        result = subprocess.run(
+        ps_check = subprocess.run(
             ["powershell.exe", "-Command", "echo 'PowerShell Available'"],
             capture_output=True,
             text=True,
             timeout=5,
+            check=False,
         )
-        if result.returncode != 0:
+        if ps_check.returncode != 0:
             logger.error("PowerShell is not available or not working properly")
             sys.exit(1)
-    except Exception as e:
-        logger.error(f"PowerShell check failed: {e}")
+    except (subprocess.TimeoutExpired, subprocess.CalledProcessError, OSError) as e:
+        logger.error("PowerShell check failed: %s", e)
         sys.exit(1)
 
     # Handle direct command execution
     if args.execute:
         executor = PowerShellExecutor(config)
-        result = executor.execute_command(args.execute, args.timeout, args.format)
+        exec_result = executor.execute_command(args.execute, args.timeout, args.format)
 
-        if result["success"]:
-            print(result["stdout"])
+        if exec_result["success"]:
+            print(exec_result["stdout"])
             sys.exit(0)
         else:
-            print(f"Error: {result['error']}", file=sys.stderr)
-            if result["stderr"]:
-                print(result["stderr"], file=sys.stderr)
-            sys.exit(result.get("exit_code", 1))
+            print(f"Error: {exec_result['error']}", file=sys.stderr)
+            if exec_result["stderr"]:
+                print(exec_result["stderr"], file=sys.stderr)
+            sys.exit(exec_result.get("exit_code", 1))
 
     # Run MCP server
     logger.info("Starting MCP PowerShell Server in stdio mode")
@@ -456,7 +468,7 @@ async def main():
         await server.run_stdio()
     except KeyboardInterrupt:
         logger.info("Server stopped by user")
-    except Exception:
+    except (OSError, ConnectionError, RuntimeError):
         logger.exception("Server error")
         sys.exit(1)
 
