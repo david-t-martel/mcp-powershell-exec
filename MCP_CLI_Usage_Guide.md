@@ -17,9 +17,11 @@ The MCP PowerShell server allows MCP clients to execute PowerShell commands on W
 ## Available MCP Tools
 
 ### 1. `execute_powershell`
+
 Execute PowerShell commands with various output formats.
 
 **Parameters:**
+
 - `command` (required): PowerShell command to execute
 - `timeout` (optional): Execution timeout in seconds (1-300)
 - `format` (optional): Output format - "text", "json", "xml", or "csv"
@@ -27,39 +29,47 @@ Execute PowerShell commands with various output formats.
 **Example Commands:**
 
 #### System Information
+
 ```powershell
 Get-ComputerInfo | Select-Object WindowsProductName, WindowsVersion, CsName
 ```
 
 #### Disk Space
+
 ```powershell
 Get-PSDrive -PSProvider FileSystem | Select-Object Name, @{Name='Free(GB)';Expression={[math]::Round($_.Free/1GB,2)}}
 ```
 
 #### Running Processes
+
 ```powershell
 Get-Process | Select-Object Name, CPU, WorkingSet | Sort-Object CPU -Descending | Select-Object -First 10
 ```
 
 #### Network Adapters
+
 ```powershell
 Get-NetAdapter | Where-Object {$_.Status -eq 'Up'} | Select-Object Name, InterfaceDescription
 ```
 
 #### Current Directory
+
 ```powershell
 Get-ChildItem | Select-Object Name, Length, LastWriteTime
 ```
 
 ### 2. `run_powershell_script`
+
 Execute PowerShell scripts with arguments.
 
 **Parameters:**
+
 - `script` (required): PowerShell script content
 - `arguments` (optional): Array of arguments to pass to script
 - `timeout` (optional): Execution timeout in seconds
 
 **Example:**
+
 ```powershell
 param($Name)
 Write-Host "Hello, $Name!"
@@ -67,9 +77,11 @@ Get-Date
 ```
 
 ### 3. `test_powershell_safety`
+
 Test if a command is safe to execute (security check only).
 
 **Parameters:**
+
 - `command` (required): PowerShell command to test
 
 ## Security Features
@@ -77,6 +89,7 @@ Test if a command is safe to execute (security check only).
 The server includes multiple security layers:
 
 ### Blocked Commands
+
 - `Format-Computer`
 - `Remove-Computer`
 - `Reset-ComputerMachinePassword`
@@ -84,6 +97,7 @@ The server includes multiple security layers:
 - `Stop-Computer`
 
 ### Dangerous Pattern Detection
+
 - Recursive file deletion (`Remove-Item ... -Recurse`)
 - Volume formatting (`Format-Volume`)
 - Execution policy changes (`Set-ExecutionPolicy Unrestricted`)
@@ -93,6 +107,7 @@ The server includes multiple security layers:
 - Registry access
 
 ### Other Protections
+
 - Command length limits (configurable, default 10,000 chars)
 - Execution timeouts (configurable, default 30 seconds)
 - Restricted execution policy
@@ -101,6 +116,7 @@ The server includes multiple security layers:
 ## Common Use Cases for MCP Clients
 
 ### 1. System Monitoring
+
 ```powershell
 # CPU and Memory usage
 Get-Counter "\\Processor(_Total)\\% Processor Time", "\\Memory\\Available MBytes"
@@ -110,6 +126,7 @@ Get-WmiObject -Class Win32_LogicalDisk | Select-Object DeviceID, @{Name="Size(GB
 ```
 
 ### 2. File Operations
+
 ```powershell
 # Search for files
 Get-ChildItem -Path C:\\ -Filter "*.log" -Recurse -ErrorAction SilentlyContinue | Select-Object FullName, Length, LastWriteTime
@@ -119,6 +136,7 @@ Get-Content "C:\\Windows\\System32\\drivers\\etc\\hosts" | Select-Object -First 
 ```
 
 ### 3. Network Information
+
 ```powershell
 # Network connections
 Get-NetTCPConnection | Where-Object {$_.State -eq "Established"} | Select-Object LocalAddress, LocalPort, RemoteAddress, RemotePort
@@ -128,6 +146,7 @@ Get-NetIPAddress | Where-Object {$_.AddressFamily -eq "IPv4"} | Select-Object In
 ```
 
 ### 4. Process Management
+
 ```powershell
 # Find specific processes
 Get-Process | Where-Object {$_.ProcessName -like "*chrome*"} | Select-Object Name, CPU, WorkingSet
@@ -137,6 +156,7 @@ Get-Process | Sort-Object CPU -Descending | Select-Object -First 5 Name, CPU, Wo
 ```
 
 ### 5. Windows Services
+
 ```powershell
 # Running services
 Get-Service | Where-Object {$_.Status -eq "Running"} | Select-Object Name, Status, StartType
@@ -148,6 +168,7 @@ Get-Service -Name "Windows Update" | Select-Object Name, Status, StartType
 ## Claude Desktop Integration
 
 1. Add the server to your Claude Desktop configuration:
+
 ```json
 {
   "mcpServers": {
@@ -183,12 +204,14 @@ Get-Service -Name "Windows Update" | Select-Object Name, Status, StartType
 ## Troubleshooting
 
 ### Common Issues
+
 - **Timeout errors**: Increase timeout or simplify the command
 - **Access denied**: Some operations require administrator privileges
 - **Command blocked**: The security system blocked a potentially dangerous command
 - **No output**: Command executed but produced no results
 
 ### Logs
+
 Check the logs directory for detailed execution logs and command history.
 
 ## Example Session
@@ -197,7 +220,7 @@ Check the logs directory for detailed execution logs and command history.
 
 **Claude:** I'll check your system information using PowerShell.
 
-*[Uses execute_powershell tool with Get-ComputerInfo command]*
+_[Uses execute_powershell tool with Get-ComputerInfo command]_
 
 **Result:** Shows Windows version, computer name, memory, etc.
 
@@ -205,7 +228,7 @@ Check the logs directory for detailed execution logs and command history.
 
 **Claude:** Let me check the top CPU-consuming processes.
 
-*[Uses execute_powershell tool with Get-Process command, sorted by CPU]*
+_[Uses execute_powershell tool with Get-Process command, sorted by CPU]_
 
 **Result:** Shows top 10 processes with CPU usage data.
 

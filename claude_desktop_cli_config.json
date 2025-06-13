@@ -2,9 +2,7 @@
   "mcpServers": {
     "powershell-cli": {
       "command": "python",
-      "args": [
-        "C:\\codedev\\mcp_servers\\mcp-powershell-exec\\mcp_server.py"
-      ],
+      "args": ["C:\\codedev\\mcp_servers\\mcp-powershell-exec\\mcp_server.py"],
       "env": {
         "MCP_PWSH_LOGGING__LOG_LEVEL": "INFO",
         "MCP_PWSH_SECURITY__EXECUTION_POLICY": "RemoteSigned",

@@ -219,13 +219,13 @@ def get_config() -> Config:
 def validate_config(config: Config) -> List[str]:
     """Validate configuration and return list of issues"""
     issues = []
-    
+
     # Validate logging directory
     try:
         os.makedirs(config.logging.log_dir, exist_ok=True)
     except Exception as e:
         issues.append(f"Cannot create log directory '{config.logging.log_dir}': {e}")
-    
+
     # Validate log level
     valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
     if config.logging.log_level.upper() not in valid_levels:
@@ -233,24 +233,28 @@ def validate_config(config: Config) -> List[str]:
             f"Invalid log level '{config.logging.log_level}'. "
             f"Must be one of: {', '.join(valid_levels)}"
         )
-    
+
     # Validate execution policy
     valid_policies = [
-        "Restricted", "AllSigned", "RemoteSigned",
-        "Unrestricted", "Bypass", "Undefined"
+        "Restricted",
+        "AllSigned",
+        "RemoteSigned",
+        "Unrestricted",
+        "Bypass",
+        "Undefined",
     ]
     if config.security.execution_policy not in valid_policies:
         issues.append(
             f"Invalid execution policy '{config.security.execution_policy}'. "
             f"Must be one of: {', '.join(valid_policies)}"
         )
-    
+
     # Validate timeout
     if config.security.command_timeout <= 0:
         issues.append("Command timeout must be greater than 0")
-    
+
     # Validate max command length
     if config.security.max_command_length <= 0:
         issues.append("Max command length must be greater than 0")
-    
+
     return issues
