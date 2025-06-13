@@ -163,7 +163,7 @@ async def execute_powershell(
     command: str,
     ctx: Context,
     timeout: Optional[int] = None,
-    output_format: str = "text",
+    output_format: str = "text"
 ) -> str:
     """Execute PowerShell commands securely."""
     await ctx.info(f"Executing PowerShell command: {command[:100]}...")
@@ -180,7 +180,7 @@ async def execute_powershell(
     result = executor.execute_command(command, timeout, output_format)
 
     if result["success"]:
-        execution_time = result.get("execution_time", 0)
+        execution_time = result.get('execution_time', 0)
         await ctx.info(f"Command executed successfully in {execution_time}s")
     else:
         await ctx.warning(f"Command failed: {result.get('error', 'Unknown error')}")
@@ -194,7 +194,7 @@ async def run_powershell_script(
     script: str,
     ctx: Context,
     arguments: Optional[List[str]] = None,
-    timeout: Optional[int] = None,
+    timeout: Optional[int] = None
 ) -> str:
     """Execute PowerShell scripts with arguments."""
     await ctx.info(f"Executing PowerShell script ({len(script)} chars)...")
@@ -229,7 +229,7 @@ async def run_powershell_script(
             pass  # Ignore cleanup errors
 
         if result["success"]:
-            execution_time = result.get("execution_time", 0)
+            execution_time = result.get('execution_time', 0)
             await ctx.info(f"Script executed successfully in {execution_time}s")
         else:
             await ctx.warning(f"Script failed: {result.get('error', 'Unknown error')}")
@@ -238,7 +238,7 @@ async def run_powershell_script(
             "tool": "run_powershell_script",
             "script_length": len(script),
             "arguments": arguments or [],
-            "result": result,
+            "result": result
         }
         return json.dumps(response, indent=2)
 
@@ -319,430 +319,24 @@ Parameters:
 """
 
 
-@mcp.resource("powershell://syntax/commands")
-def powershell_command_syntax() -> str:
-    """PowerShell command syntax reference for common operations."""
-    return """
-# PowerShell Command Syntax Reference
-
-## Basic Commands
-
-- **Get-Command**: List available commands
-  ```powershell
-  Get-Command -Name "*process*" -CommandType Cmdlet
-  ```
-
-- **Get-Help**: Get help documentation for commands
-  ```powershell
-  Get-Help Get-Process -Detailed
-  ```
-
-- **Get-Process**: List running processes
-  ```powershell
-  Get-Process | Sort-Object CPU -Descending | Select-Object -First 5
-  ```
-
-- **Get-Service**: List services
-  ```powershell
-  Get-Service | Where-Object {$_.Status -eq "Running"}
-  ```
-
-## File System Operations
-
-- **Get-ChildItem**: List files and folders (like ls or dir)
-  ```powershell
-  Get-ChildItem -Path C:\\Windows -Filter *.exe -Recurse -ErrorAction SilentlyContinue
-  ```
-
-- **New-Item**: Create new files or directories
-  ```powershell
-  New-Item -Path "C:\\temp\\test.txt" -ItemType File -Value "Hello, World!"
-  New-Item -Path "C:\\temp\\newdir" -ItemType Directory
-  ```
-
-- **Copy-Item**: Copy files or directories
-  ```powershell
-  Copy-Item -Path "C:\\source\\file.txt" -Destination "C:\\dest\\file.txt"
-  ```
-
-## Data Manipulation
-
-- **Select-Object**: Select properties from objects
-  ```powershell
-  Get-Process | Select-Object Name, CPU, WorkingSet
-  ```
-
-- **Where-Object**: Filter objects based on properties
-  ```powershell
-  Get-Process | Where-Object {$_.CPU -gt 10}
-  ```
-
-- **Sort-Object**: Sort objects
-  ```powershell
-  Get-Process | Sort-Object CPU -Descending
-  ```
-
-- **Group-Object**: Group objects by property
-  ```powershell
-  Get-Process | Group-Object Company
-  ```
-
-## Output Formats
-
-- **ConvertTo-Json**: Convert objects to JSON
-  ```powershell
-  Get-Process | Select-Object Name, CPU | ConvertTo-Json
-  ```
-
-- **ConvertTo-Csv**: Convert objects to CSV
-  ```powershell
-  Get-Process | Select-Object Name, CPU | ConvertTo-Csv
-  ```
-
-- **Export-Csv**: Export objects to a CSV file
-  ```powershell
-  Get-Process | Export-Csv -Path "processes.csv" -NoTypeInformation
-  ```
-"""
-
-
-@mcp.resource("powershell://examples/scripts")
-def powershell_scripting_examples() -> str:
-    """Examples of PowerShell scripts for common administrative tasks."""
-    return """
-# PowerShell Scripting Examples
-
-## File Management Scripts
-
-### Backup Script
-```powershell
-# Backup files with timestamp
-$backupPath = "C:\\Backup\\$(Get-Date -Format 'yyyy-MM-dd_HH-mm-ss')"
-New-Item -Path $backupPath -ItemType Directory -Force
-Copy-Item -Path "C:\\Important\\*" -Destination $backupPath -Recurse
-Write-Output "Backup completed to $backupPath"
-```
-
-### Clean Temporary Files
-```powershell
-# Clean temporary files older than 7 days
-$tempPaths = @("$env:TEMP", "C:\\Windows\\Temp")
-foreach ($path in $tempPaths) {
-    Get-ChildItem -Path $path -Recurse -Force -ErrorAction SilentlyContinue |
-    Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-7) } |
-    Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
-}
-Write-Output "Temporary files cleaned"
-```
-
-## System Monitoring Scripts
-
-### Process Monitor
-```powershell
-# Monitor high CPU processes
-while ($true) {
-    $highCPU = Get-Process | Where-Object { $_.CPU -gt 100 } |
-               Sort-Object CPU -Descending | Select-Object -First 5
-    if ($highCPU) {
-        Write-Output "High CPU processes detected:"
-        $highCPU | Format-Table Name, CPU, WorkingSet
-    }
-    Start-Sleep -Seconds 30
-}
-```
-
-### Service Health Check
-```powershell
-# Check critical services
-$criticalServices = @("Spooler", "Themes", "AudioSrv")
-foreach ($service in $criticalServices) {
-    $svc = Get-Service -Name $service -ErrorAction SilentlyContinue
-    if ($svc) {
-        if ($svc.Status -ne "Running") {
-            Write-Warning "Service $service is $($svc.Status)"
-        } else {
-            Write-Output "Service $service is running normally"
-        }
-    }
-}
-```
-
-## Data Processing Scripts
-
-### Log Analysis
-```powershell
-# Analyze Windows Event Logs
-$errors = Get-EventLog -LogName System -EntryType Error -Newest 50
-$grouped = $errors | Group-Object Source | Sort-Object Count -Descending
-$grouped | Select-Object Name, Count | Format-Table
-```
-
-### CSV Data Processing
-```powershell
-# Process CSV data
-$data = Import-Csv -Path "data.csv"
-$processed = $data | Where-Object { $_.Status -eq "Active" } |
-             Select-Object Name, @{n="UpperName";e={$_.Name.ToUpper()}}
-$processed | Export-Csv -Path "processed.csv" -NoTypeInformation
-```
-"""
-
-
-@mcp.resource("powershell://best-practices/coding")
-def powershell_best_practices() -> str:
-    """PowerShell coding best practices and conventions."""
-    return """
-# PowerShell Best Practices
-
-## Naming Conventions
-
-### Use Approved Verbs
-PowerShell has a specific set of approved verbs. Use `Get-Verb` to see them.
-
-**Good:**
-```powershell
-Get-Process, Set-Variable, New-Item
-```
-
-**Avoid:**
-```powershell
-Fetch-Process, Change-Variable, Create-Item
-```
-
-### Use Singular Nouns
-Use singular nouns for cmdlet names.
-
-**Good:**
-```powershell
-Get-User, Add-Member
-```
-
-**Avoid:**
-```powershell
-Get-Users, Add-Members
-```
-
-### Use Pascal Case
-Use Pascal case for functions and cmdlets.
-
-**Good:**
-```powershell
-function Get-SystemInfo { }
-```
-
-**Avoid:**
-```powershell
-function get-systeminfo { }
-function get_system_info { }
-```
-
-## Parameter Handling
-
-### Use Parameter Validation
-```powershell
-function Test-Path {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory=$true)]
-        [ValidateScript({Test-Path $_})]
-        [string]$Path,
-
-        [ValidateSet("File", "Directory")]
-        [string]$Type = "File"
-    )
-    # Function implementation
-}
-```
-
-### Support Common Parameters
-```powershell
-[CmdletBinding(SupportsShouldProcess)]
-param(
-    [Parameter(ValueFromPipeline=$true)]
-    [string[]]$InputObject
-)
-```
-
-## Error Handling
-
-### Use Try-Catch-Finally
-```powershell
-try {
-    $result = Get-Content -Path $Path -ErrorAction Stop
-    Write-Output $result
-}
-catch [System.IO.FileNotFoundException] {
-    Write-Error "File not found: $Path"
-}
-catch {
-    Write-Error "An unexpected error occurred: $($_.Exception.Message)"
-}
-finally {
-    # Cleanup code
-}
-```
-
-### Use Error Action Preferences
-```powershell
-# Stop on any error
-$ErrorActionPreference = "Stop"
-
-# Continue but log errors
-$ErrorActionPreference = "Continue"
-```
-
-## Performance Tips
-
-### Use ForEach-Object Efficiently
-```powershell
-# Fast for small collections
-$collection | ForEach-Object { $_.Property }
-
-# Faster for large collections
-foreach ($item in $collection) {
-    $item.Property
-}
-```
-
-### Avoid Repeated Object Creation
-```powershell
-# Inefficient
-1..1000 | ForEach-Object { New-Object PSObject -Property @{Id=$_} }
-
-# Better
-$results = @()
-1..1000 | ForEach-Object {
-    $results += [PSCustomObject]@{Id=$_}
-}
-```
-
-## Security Considerations
-
-### Use Credential Objects
-```powershell
-$credential = Get-Credential
-Invoke-Command -ComputerName Server01 -Credential $credential -ScriptBlock { Get-Service }
-```
-
-### Validate Input
-```powershell
-function Invoke-SafeCommand {
-    param(
-        [Parameter(Mandatory=$true)]
-        [ValidatePattern('^[a-zA-Z0-9\\s\\-_]+$')]
-        [string]$Command
-    )
-    # Execute only validated commands
-}
-```
-
-### Use Execution Policy
-```powershell
-# Check current policy
-Get-ExecutionPolicy
-
-# Set appropriate policy
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
-"""
-
-
-@mcp.resource("powershell://schemas/api-responses")
-def powershell_api_schemas() -> str:
-    """Examples of PowerShell output formats for API integration."""
-    return """
-# PowerShell API Response Schemas
-
-## JSON Output Format
-
-### Process Information
-```powershell
-Get-Process | Select-Object Name, Id, CPU | ConvertTo-Json
-```
-Example output:
-```json
-[
-  {
-    "Name": "chrome",
-    "Id": 1234,
-    "CPU": 10.5
-  },
-  {
-    "Name": "explorer",
-    "Id": 5678,
-    "CPU": 5.2
-  }
-]
-```
-
-### Service Status
-```powershell
-Get-Service | Select-Object Name, Status, StartType | ConvertTo-Json
-```
-Example output:
-```json
-[
-  {
-    "Name": "Spooler",
-    "Status": "Running",
-    "StartType": "Automatic"
-  },
-  {
-    "Name": "Fax",
-    "Status": "Stopped",
-    "StartType": "Manual"
-  }
-]
-```
-
-## CSV Output Format
-```powershell
-Get-Service | Select-Object Name, DisplayName, Status | ConvertTo-Csv -NoTypeInformation
-```
-Example output:
-```csv
-"Name","DisplayName","Status"
-"AdobeARMservice","Adobe Acrobat Update Service","Running"
-"AJRouter","AllJoyn Router Service","Stopped"
-"ALG","Application Layer Gateway Service","Stopped"
-```
-
-## XML Output Format
-```powershell
-Get-Process | Select-Object Name, Id | ConvertTo-Xml -As String
-```
-Example output:
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<Objects>
-  <Object Type="System.Management.Automation.PSCustomObject">
-    <Property Name="Name" Type="System.String">chrome</Property>
-    <Property Name="Id" Type="System.Int32">1234</Property>
-  </Object>
-</Objects>
-```
-
-## Table Output Format
-When PowerShell output is displayed as text, it's typically formatted as a table:
-
-```
-Name      Id    CPU WorkingSet
-----      --    --- ----------
-chrome    1234 10.5  150000000
-explorer  5678  5.2   80000000
-```
-
-## Error Response Format
-```json
-{
-  "error": {
-    "type": "System.Management.Automation.CommandNotFoundException",
-    "message": "The term 'Get-NonExistentCommand' is not recognized",
-    "category": "ObjectNotFound",
-    "fullyQualifiedErrorId": "CommandNotFoundException"
-  }
-}
-```
+@mcp.prompt(description="Generate PowerShell commands for Windows administration")
+async def windows_admin_prompt(task: str, context: str = "general") -> str:
+    """Generate PowerShell commands for Windows administration tasks."""
+    return f"""
+You are a Windows PowerShell expert. Generate safe and effective PowerShell \
+commands for the following task:
+
+Task: {task}
+Context: {context}
+
+Please provide:
+1. The PowerShell command(s) to accomplish this task
+2. Brief explanation of what each command does
+3. Any important safety considerations
+4. Expected output or results
+
+Focus on commonly used, safe commands that are appropriate for system \
+administration.
 """
 
 
@@ -841,7 +435,7 @@ async def main() -> None:
     logger.info("Starting MCP PowerShell Server in stdio mode")
 
     try:
-        await mcp.run_stdio_async()
+        mcp.run("stdio")
     except KeyboardInterrupt:
         logger.info("Server stopped by user")
     except (OSError, ConnectionError, RuntimeError):
