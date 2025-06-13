@@ -90,6 +90,129 @@
         "panel": "new"
       },
       "problemMatcher": []
+    },
+    {
+      "label": "Format Code (Black)",
+      "type": "shell",
+      "command": "pwsh.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy", 
+        "Bypass",
+        "-Command",
+        "cd '${workspaceFolder}'; if (Test-Path '.venv/Scripts/black.exe') { .venv/Scripts/black.exe . } else { python -m black . }"
+      ],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Lint Code (Flake8)",
+      "type": "shell",
+      "command": "pwsh.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass", 
+        "-Command",
+        "cd '${workspaceFolder}'; if (Test-Path '.venv/Scripts/flake8.exe') { .venv/Scripts/flake8.exe . } else { python -m flake8 . }"
+      ],
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": [
+        {
+          "owner": "flake8",
+          "fileLocation": "absolute",
+          "pattern": {
+            "regexp": "^(.*):(\\d+):(\\d+):\\s+(E\\d+|W\\d+|F\\d+)\\s+(.*)$",
+            "file": 1,
+            "line": 2,
+            "column": 3,
+            "code": 4,
+            "message": 5
+          }
+        }
+      ]
+    },
+    {
+      "label": "Type Check (MyPy)",
+      "type": "shell",
+      "command": "pwsh.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "cd '${workspaceFolder}'; if (Test-Path '.venv/Scripts/mypy.exe') { .venv/Scripts/mypy.exe . } else { python -m mypy . }"
+      ],
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": [
+        {
+          "owner": "mypy",
+          "fileLocation": "absolute",
+          "pattern": {
+            "regexp": "^(.*):(\\d+):(\\d+):\\s+(error|warning|note):\\s+(.*)$",
+            "file": 1,
+            "line": 2,
+            "column": 3,
+            "severity": 4,
+            "message": 5
+          }
+        }
+      ]
+    },
+    {
+      "label": "Run All Linting",
+      "type": "shell",
+      "command": "pwsh.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "cd '${workspaceFolder}'; Write-Host 'Running Black formatter...'; if (Test-Path '.venv/Scripts/black.exe') { .venv/Scripts/black.exe . } else { python -m black . }; Write-Host 'Running Flake8 linter...'; if (Test-Path '.venv/Scripts/flake8.exe') { .venv/Scripts/flake8.exe . } else { python -m flake8 . }; Write-Host 'Running MyPy type checker...'; if (Test-Path '.venv/Scripts/mypy.exe') { .venv/Scripts/mypy.exe . } else { python -m mypy . }"
+      ],
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": [
+        {
+          "owner": "flake8",
+          "fileLocation": "absolute",
+          "pattern": {
+            "regexp": "^(.*):(\\d+):(\\d+):\\s+(E\\d+|W\\d+|F\\d+)\\s+(.*)$",
+            "file": 1,
+            "line": 2,
+            "column": 3,
+            "code": 4,
+            "message": 5
+          }
+        },
+        {
+          "owner": "mypy",
+          "fileLocation": "absolute",
+          "pattern": {
+            "regexp": "^(.*):(\\d+):(\\d+):\\s+(error|warning|note):\\s+(.*)$",
+            "file": 1,
+            "line": 2,
+            "column": 3,
+            "severity": 4,
+            "message": 5
+          }
+        }
+      ]
     }
   ]
 }
