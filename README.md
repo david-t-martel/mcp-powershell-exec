@@ -43,7 +43,7 @@ The project includes scripts to automatically set up a Python virtual environmen
 # Start the server (automatically uses virtual environment)
 .\.venv\Scripts\python.exe mcp_server.py
 
-# Or run tests  
+# Or run tests
 .\.venv\Scripts\python.exe test_fastmcp_integration.py
 ```
 
@@ -119,7 +119,9 @@ To use this MCP server with GitHub Copilot in VSCode Insiders, follow these step
      "mcpServers": {
        "powershell-exec": {
          "command": "C:\\codedev\\mcp_servers\\mcp-powershell-exec\\.venv\\Scripts\\python.exe",
-         "args": ["C:\\codedev\\mcp_servers\\mcp-powershell-exec\\mcp_server.py"],
+         "args": [
+           "C:\\codedev\\mcp_servers\\mcp-powershell-exec\\mcp_server.py"
+         ],
          "env": {
            "MCP_PWSH_LOGGING__LOG_LEVEL": "INFO",
            "MCP_PWSH_SECURITY__EXECUTION_POLICY": "RemoteSigned"

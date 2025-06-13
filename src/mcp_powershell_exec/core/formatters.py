@@ -1,6 +1,7 @@
 """
 Output formatting utilities for PowerShell commands.
 """
+
 from .types import OutputFormat
 
 

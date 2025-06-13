@@ -1,12 +1,15 @@
 """
 Shared type definitions for MCP PowerShell Exec Server.
 """
-from typing import Optional, Literal
+
+from typing import Literal, Optional
+
 from pydantic import BaseModel
 
 
 class ExecutionResult(BaseModel):
     """Result of PowerShell command execution."""
+
     success: bool
     stdout: str
     stderr: str
@@ -17,6 +20,7 @@ class ExecutionResult(BaseModel):
 
 class SecurityCheckResult(BaseModel):
     """Result of security validation."""
+
     is_safe: bool
     error_message: str = ""
 

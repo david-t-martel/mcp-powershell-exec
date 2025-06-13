@@ -1,14 +1,16 @@
 """
 PowerShell command execution with security and formatting.
 """
+
 import subprocess
 import time
 from typing import Optional
 
 from config import Config
 from logging_setup import get_logger
-from .security import SecurityValidator
+
 from .formatters import OutputFormatter
+from .security import SecurityValidator
 from .types import ExecutionResult, OutputFormat
 
 
@@ -25,7 +27,7 @@ class PowerShellExecutor:
         self,
         code: str,
         timeout: Optional[int] = None,
-        format_output: OutputFormat = "text"
+        format_output: OutputFormat = "text",
     ) -> ExecutionResult:
         """Execute PowerShell command with security checks and formatting."""
         # Security validation
@@ -124,9 +126,9 @@ class PowerShellExecutor:
         return {
             "is_safe": security_result.is_safe,
             "message": (
-                security_result.error_message 
-                if not security_result.is_safe 
+                security_result.error_message
+                if not security_result.is_safe
                 else "Command is safe to execute"
             ),
-            "command": code
+            "command": code,
         }

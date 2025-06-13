@@ -1,10 +1,12 @@
 """
 Security validation for PowerShell commands.
 """
+
 import re
 
 from config import Config
 from logging_setup import get_logger
+
 from .types import SecurityCheckResult
 
 
@@ -33,7 +35,7 @@ class SecurityValidator:
             if blocked_cmd.lower() in code_lower:
                 return SecurityCheckResult(
                     is_safe=False,
-                    error_message=f"Blocked command detected: {blocked_cmd}"
+                    error_message=f"Blocked command detected: {blocked_cmd}",
                 )
 
         # Check dangerous patterns
@@ -41,7 +43,7 @@ class SecurityValidator:
             if re.search(pattern, code, re.IGNORECASE):
                 return SecurityCheckResult(
                     is_safe=False,
-                    error_message=f"Dangerous pattern detected: {pattern}"
+                    error_message=f"Dangerous pattern detected: {pattern}",
                 )
 
         return SecurityCheckResult(is_safe=True)
