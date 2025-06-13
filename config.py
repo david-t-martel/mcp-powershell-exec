@@ -1,316 +1,256 @@
 """
 Configuration management for MCP PowerShell Exec Server.
 
-This module handles loading configuration from multiple sources:
-- Configuration files (JSON/YAML)
-- Environment variables
-- Command line arguments
+This module provides a central configuration system that supports:
 - Default values
+- Environment variable overrides
+- Configuration file (YAML/JSON) overrides
+- Command-line argument overrides
 """
 
 import json
+import logging
 import os
-import yaml
-from dataclasses import dataclass, field, asdict
-from typing import Dict, List, Any, Optional, Union
 from pathlib import Path
-from dotenv import load_dotenv
+from typing import List, Optional, Union
+
+from pydantic import BaseModel, Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Set up logger
+logger = logging.getLogger("mcp.config")
 
 
-@dataclass
-class SecurityConfig:
-    """Security-related configuration settings."""
-    require_api_key: bool = False
-    api_keys: List[str] = field(default_factory=list)
-    execution_policy: str = "Restricted"
-    dangerous_patterns: List[str] = field(default_factory=lambda: [
-        r"rm\s+-Recurse",
-        r"Remove-Item\s+.*\s+-Recurse",
-        r"Format-Volume",
-        r"Clear-Disk",
-        r"Reset-ComputerMachinePassword",
-        r"Invoke-Expression.*Invoke-WebRequest",
-        r"Start-Process.*-Verb\s+RunAs",
-        r"New-Service",
-        r"Stop-Service",
-        r"Set-ExecutionPolicy\s+Unrestricted",
-        r"Invoke-Command\s+.*\s+-ScriptBlock",
-        r"New-PSSession",
-        r"Enter-PSSession",
-        r"Enable-PSRemoting",
-        r"Set-Item\s+WSMan:",
-        r"Registry::",
-        r"HKEY_",
-        r"Get-Credential",
-    ])
-    blocked_commands: List[str] = field(default_factory=lambda: [
-        "Format-Computer",
-        "Remove-Computer", 
-        "Reset-ComputerMachinePassword",
-        "Restart-Computer",
-        "Stop-Computer",
-        "Checkpoint-Computer",
-        "Restore-Computer",
-        "Clear-RecycleBin",
-        "Remove-Item",
-        "rd",
-        "rmdir",
-        "del",
-        "erase",
-    ])
-    max_command_length: int = 5000
-    command_timeout: int = 30
+class SecurityConfig(BaseModel):
+    """Security configuration settings"""
 
-
-@dataclass  
-class ServerConfig:
-    """Server-related configuration settings."""
-    host: str = "127.0.0.1"
-    port: int = 8000
-    cors_origins: List[str] = field(default_factory=lambda: ["*"])
-    default_timeout: int = 30
-    max_concurrent_requests: int = 10
-
-
-@dataclass
-class LoggingConfig:
-    """Logging-related configuration settings."""
-    log_level: str = "INFO"
-    log_format: str = "text"  # text, json
-    log_dir: str = "logs"
-    enable_command_logging: bool = True
-    command_history_dir: str = "command_history"
-    max_log_file_size: int = 10 * 1024 * 1024  # 10MB
-    max_log_files: int = 5
-
-
-@dataclass
-class AppConfig:
-    """Main application configuration."""
-    app_name: str = "mcp-powershell-exec"
-    version: str = "1.0.0"
-    debug: bool = False
-    security: SecurityConfig = field(default_factory=SecurityConfig)
-    server: ServerConfig = field(default_factory=ServerConfig)
-    logging: LoggingConfig = field(default_factory=LoggingConfig)
-
-
-def load_config_file(file_path: str) -> Dict[str, Any]:
-    """Load configuration from a JSON or YAML file."""
-    if not os.path.exists(file_path):
-        return {}
-    
-    try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            if file_path.lower().endswith(('.yml', '.yaml')):
-                return yaml.safe_load(f) or {}
-            else:
-                return json.load(f) or {}
-    except Exception as e:
-        print(f"Warning: Failed to load config file {file_path}: {e}")
-        return {}
-
-
-def load_env_vars(prefix: str = "MCP_PWSH_") -> Dict[str, Any]:
-    """Load configuration from environment variables."""
-    config = {}
-    
-    for key, value in os.environ.items():
-        if key.startswith(prefix):
-            # Remove prefix and convert to config structure
-            config_key = key[len(prefix):].lower()
-            
-            # Handle nested configuration (e.g., MCP_PWSH_SERVER__PORT)
-            parts = config_key.split('__')
-            current = config
-            
-            for part in parts[:-1]:
-                if part not in current:
-                    current[part] = {}
-                current = current[part]
-            
-            # Convert string values to appropriate types
-            final_key = parts[-1]
-            try:
-                # Try to parse as JSON (for lists, booleans, numbers)
-                current[final_key] = json.loads(value)
-            except (json.JSONDecodeError, ValueError):
-                # Keep as string if not valid JSON
-                current[final_key] = value
-    
-    return config
-
-
-def merge_configs(*configs: Dict[str, Any]) -> Dict[str, Any]:
-    """Merge multiple configuration dictionaries."""
-    result = {}
-    
-    for config in configs:
-        for key, value in config.items():
-            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
-                result[key] = merge_configs(result[key], value)
-            else:
-                result[key] = value
-    
-    return result
-
-
-def create_config_from_dict(config_dict: Dict[str, Any]) -> AppConfig:
-    """Create AppConfig instance from dictionary, handling nested structures."""
-    # Create nested config objects
-    security_data = config_dict.get('security', {})
-    server_data = config_dict.get('server', {})
-    logging_data = config_dict.get('logging', {})
-    
-    security_config = SecurityConfig(**{
-        k: v for k, v in security_data.items() 
-        if k in SecurityConfig.__dataclass_fields__
-    })
-    
-    server_config = ServerConfig(**{
-        k: v for k, v in server_data.items() 
-        if k in ServerConfig.__dataclass_fields__
-    })
-    
-    logging_config = LoggingConfig(**{
-        k: v for k, v in logging_data.items() 
-        if k in LoggingConfig.__dataclass_fields__
-    })
-    
-    # Create main config
-    main_data = {
-        k: v for k, v in config_dict.items() 
-        if k not in ['security', 'server', 'logging'] and k in AppConfig.__dataclass_fields__
-    }
-    
-    return AppConfig(
-        security=security_config,
-        server=server_config,
-        logging=logging_config,
-        **main_data
+    dangerous_patterns: List[str] = Field(
+        default=[
+            r"rm\s+-Recurse",
+            r"Remove-Item\s+.*\s+-Recurse",
+            r"Format-Volume",
+            r"Clear-Disk",
+            r"Reset-ComputerMachinePassword",
+            r"Invoke-Expression.*Invoke-WebRequest",
+            r"Start-Process.*-Verb\s+RunAs",
+            r"New-Service",
+            r"Stop-Service",
+            r"Set-ExecutionPolicy\s+Unrestricted",
+        ],
+        description="Regular expression patterns for dangerous commands",
     )
+    api_keys: List[str] = Field(
+        default=[],
+        description="List of valid API keys (empty list means no authentication)",
+    )
+    require_api_key: bool = Field(
+        default=False,
+        description="Whether API key authentication is required",
+    )
+    execution_policy: str = Field(
+        default="Restricted",
+        description="PowerShell execution policy (Restricted, RemoteSigned, etc.)",
+    )
+    max_command_length: int = Field(
+        default=10000,
+        description="Maximum length of PowerShell commands in characters",
+    )
+    command_timeout: int = Field(
+        default=30,
+        description="Command execution timeout in seconds",
+    )
+    blocked_commands: List[str] = Field(
+        default=[
+            "Format-Computer",
+            "Remove-Computer",
+            "Reset-ComputerMachinePassword",
+            "Restart-Computer",
+            "Stop-Computer",
+        ],
+        description="List of explicitly blocked command names",
+    )
+
+
+class LoggingConfig(BaseModel):
+    """Logging configuration settings"""
+
+    log_dir: str = Field(
+        default="logs",
+        description="Directory for log files",
+    )
+    log_level: str = Field(
+        default="INFO",
+        description="Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)",
+    )
+    log_format: str = Field(
+        default="text",
+        description="Log format (text, json)",
+    )
+    command_history_dir: str = Field(
+        default="command_history",
+        description="Directory for command history files",
+    )
+    enable_command_logging: bool = Field(
+        default=True,
+        description="Whether to save command history to files",
+    )
+
+
+class ServerConfig(BaseModel):
+    """Server configuration settings"""
+
+    host: str = Field(
+        default="127.0.0.1",
+        description="Host to bind the server to",
+    )
+    port: int = Field(
+        default=8000,
+        description="Port to run the server on",
+    )
+    cors_origins: List[str] = Field(
+        default=["*"],
+        description="List of allowed CORS origins, or ['*'] for any origin",
+    )
+    default_timeout: int = Field(
+        default=30,
+        description="Default timeout for PowerShell commands (seconds)",
+    )
+
+
+class Config(BaseSettings):
+    """Main configuration class"""
+
+    model_config = SettingsConfigDict(
+        env_prefix="MCP_PWSH_",
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_nested_delimiter="__",
+        extra="ignore",
+    )
+
+    app_name: str = Field(
+        default="mcp-powershell-exec",
+        description="Application name",
+    )
+    security: SecurityConfig = Field(
+        default_factory=SecurityConfig,
+        description="Security configuration",
+    )
+    logging: LoggingConfig = Field(
+        default_factory=LoggingConfig,
+        description="Logging configuration",
+    )
+    server: ServerConfig = Field(
+        default_factory=ServerConfig,
+        description="Server configuration",
+    )
+
+    @classmethod
+    def load_from_file(cls, file_path: Union[str, Path]) -> "Config":
+        """Load configuration from a JSON or YAML file"""
+        file_path = Path(file_path)
+        if not file_path.exists():
+            logger.warning(f"Configuration file not found: {file_path}")
+            return cls()
+
+        try:
+            with open(file_path, "r") as f:
+                if file_path.suffix.lower() in (".yml", ".yaml"):
+                    try:
+                        import yaml
+
+                        config_data = yaml.safe_load(f)
+                    except ImportError:
+                        logger.warning("PyYAML not installed, falling back to JSON")
+                        config_data = json.load(f)
+                else:
+                    config_data = json.load(f)
+
+            return cls(**config_data)
+        except Exception as e:
+            logger.error(f"Error loading configuration from {file_path}: {e}")
+            return cls()
+
+
+# Global configuration instance
+config = Config()
 
 
 def initialize_config(
-    config_file: Optional[str] = None,
-    env_file: Optional[str] = None,
-    **overrides
-) -> AppConfig:
-    """
-    Initialize configuration from multiple sources.
-    
-    Priority order (highest to lowest):
-    1. Direct overrides (keyword arguments)
-    2. Environment variables
-    3. Configuration file
-    4. Default values
-    """
-    # Load .env file if specified
-    if env_file and os.path.exists(env_file):
-        load_dotenv(env_file)
-    
-    # Start with default configuration
-    default_config = asdict(AppConfig())
-    
-    # Load from configuration file
-    file_config = {}
-    if config_file:
-        file_config = load_config_file(config_file)
-    else:
-        # Try to find default config files
-        for default_file in ['config.json', 'config.yaml', 'config.yml']:
-            if os.path.exists(default_file):
-                file_config = load_config_file(default_file)
-                break
-    
-    # Load from environment variables
-    env_config = load_env_vars()
-    
-    # Process command line overrides into nested structure
-    override_config = {}
+    config_file: Optional[str] = None, env_file: Optional[str] = None, **overrides
+) -> Config:
+    """Initialize configuration with optional file and overrides"""
+    global config
+
+    # Load from environment file if specified
+    if env_file:
+        os.environ["SETTINGS_ENV_FILE"] = env_file
+
+    # Start with environment variables and defaults
+    config = Config()
+
+    # Load from config file if specified
+    if config_file and os.path.exists(config_file):
+        file_config = Config.load_from_file(config_file)
+        for key, value in file_config.model_dump().items():
+            setattr(config, key, value)
+
+    # Apply any direct overrides
     for key, value in overrides.items():
-        if '.' in key:
-            # Handle nested keys like "server.port"
-            parts = key.split('.')
-            current = override_config
-            for part in parts[:-1]:
-                if part not in current:
-                    current[part] = {}
-                current = current[part]
-            current[parts[-1]] = value
-        else:
-            override_config[key] = value
-    
-    # Merge all configurations
-    merged_config = merge_configs(
-        default_config,
-        file_config,
-        env_config,
-        override_config
-    )
-    
-    return create_config_from_dict(merged_config)
+        if hasattr(config, key):
+            setattr(config, key, value)
+
+    # Create log directory if needed
+    if not os.path.exists(config.logging.log_dir):
+        os.makedirs(config.logging.log_dir, exist_ok=True)
+
+    # Create command history directory if needed
+    if config.logging.enable_command_logging:
+        os.makedirs(config.logging.command_history_dir, exist_ok=True)
+
+    return config
 
 
-def save_config(config: AppConfig, file_path: str, format: str = "json") -> None:
-    """Save configuration to a file."""
-    config_dict = asdict(config)
-    
-    os.makedirs(os.path.dirname(file_path), exist_ok=True)
-    
-    with open(file_path, 'w', encoding='utf-8') as f:
-        if format.lower() in ['yml', 'yaml']:
-            yaml.dump(config_dict, f, default_flow_style=False, indent=2)
-        else:
-            json.dump(config_dict, f, indent=2)
+def get_config() -> Config:
+    """Get the current configuration instance"""
+    return config
 
 
-def validate_config(config: AppConfig) -> List[str]:
-    """Validate configuration and return list of issues."""
+def validate_config(config: Config) -> List[str]:
+    """Validate configuration and return list of issues"""
     issues = []
     
-    # Validate security settings
-    if config.security.require_api_key and not config.security.api_keys:
-        issues.append("API key authentication is required but no keys are configured")
+    # Validate logging directory
+    try:
+        os.makedirs(config.logging.log_dir, exist_ok=True)
+    except Exception as e:
+        issues.append(f"Cannot create log directory '{config.logging.log_dir}': {e}")
     
+    # Validate log level
+    valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+    if config.logging.log_level.upper() not in valid_levels:
+        issues.append(
+            f"Invalid log level '{config.logging.log_level}'. "
+            f"Must be one of: {', '.join(valid_levels)}"
+        )
+    
+    # Validate execution policy
+    valid_policies = [
+        "Restricted", "AllSigned", "RemoteSigned",
+        "Unrestricted", "Bypass", "Undefined"
+    ]
+    if config.security.execution_policy not in valid_policies:
+        issues.append(
+            f"Invalid execution policy '{config.security.execution_policy}'. "
+            f"Must be one of: {', '.join(valid_policies)}"
+        )
+    
+    # Validate timeout
     if config.security.command_timeout <= 0:
         issues.append("Command timeout must be greater than 0")
     
+    # Validate max command length
     if config.security.max_command_length <= 0:
         issues.append("Max command length must be greater than 0")
     
-    # Validate server settings
-    if not (1 <= config.server.port <= 65535):
-        issues.append("Server port must be between 1 and 65535")
-    
-    if config.server.default_timeout <= 0:
-        issues.append("Default timeout must be greater than 0")
-    
-    # Validate logging settings
-    valid_log_levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
-    if config.logging.log_level.upper() not in valid_log_levels:
-        issues.append(f"Log level must be one of: {', '.join(valid_log_levels)}")
-    
-    valid_log_formats = ['text', 'json']
-    if config.logging.log_format not in valid_log_formats:
-        issues.append(f"Log format must be one of: {', '.join(valid_log_formats)}")
-    
     return issues
-
-
-# Default instance for backward compatibility
-config = AppConfig()
-
-
-if __name__ == "__main__":
-    # Example usage
-    config = initialize_config()
-    print("Current configuration:")
-    print(json.dumps(asdict(config), indent=2))
-    
-    # Validate configuration
-    issues = validate_config(config)
-    if issues:
-        print("\nConfiguration issues:")
-        for issue in issues:
-            print(f"  - {issue}")

@@ -33,14 +33,14 @@ from mcp.types import (
 )
 
 # Import local modules
-from config import initialize_config, validate_config, AppConfig
+from config import initialize_config, validate_config, Config
 from logging_setup import setup_logging, get_logger
 
 
 class PowerShellExecutor:
     """Handles secure PowerShell command execution with security controls."""
     
-    def __init__(self, config: AppConfig):
+    def __init__(self, config: Config):
         self.config = config
         self.logger = get_logger("powershell.executor")
         
@@ -161,7 +161,7 @@ class PowerShellExecutor:
 class MCPPowerShellServer:
     """MCP PowerShell Server implementation."""
     
-    def __init__(self, config: AppConfig):
+    def __init__(self, config: Config):
         self.config = config
         self.executor = PowerShellExecutor(config)
         self.logger = get_logger("mcp.server")

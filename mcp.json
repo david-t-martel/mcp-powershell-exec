@@ -1,0 +1,17 @@
+{
+  "security": {
+    "blocked_commands": ["Remove-Item", "del", "rmdir", "Format-Volume", "Stop-Computer", "Restart-Computer"],
+    "dangerous_patterns": ["Remove-Item.*-Recurse.*-Force", "Format-", "Stop-", "Restart-"],
+    "max_command_length": 2000,
+    "enable_security_checks": true
+  },
+  "execution": {
+    "default_timeout": 30,
+    "max_timeout": 300,
+    "output_limit": 50000
+  },
+  "logging": {
+    "level": "INFO",
+    "format": "text"
+  }
+}
