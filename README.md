@@ -2,18 +2,17 @@
 
 ## Overview
 
-MCP PowerShell Exec Server is a lightweight server that accepts PowerShell scripts as strings, executes them, and returns the output. Enabling AI assistants to understand and work with PowerShell.
+MCP PowerShell Exec Server is a modern Model Context Protocol (MCP) server that provides secure PowerShell command execution. Built with FastMCP, it enables AI assistants to safely interact with Windows PowerShell environments.
 
 ## Features
 
-- Accepts PowerShell scripts via string input
-- Executes scripts securely in an MCP Server environment
-- Returns execution results in real-time
-- Configurable via environment variables, config files, or command-line options
-- API key authentication for secure access
-- Structured logging with multiple output formats
-- CORS support for web client integration
-- Rate limiting for API protection
+- **FastMCP Integration**: Modern MCP implementation using the latest Python SDK
+- **Secure Execution**: Advanced security controls and command validation
+- **Multiple Output Formats**: Support for text, JSON, XML, and CSV output
+- **Resource-Rich**: Built-in PowerShell documentation and best practices
+- **Virtual Environment**: Isolated Python environment for dependencies
+- **Configuration Flexibility**: Environment variables, config files, and CLI options
+- **Comprehensive Logging**: Structured logging with audit trails
 
 ## Installation
 
@@ -41,8 +40,11 @@ The project includes scripts to automatically set up a Python virtual environmen
 # Activate the virtual environment in the current PowerShell session
 .\activate.ps1
 
-# Start the server (automatically sets up and activates the virtual environment)
-.\start-server.ps1
+# Start the server (automatically uses virtual environment)
+.\.venv\Scripts\python.exe mcp_server.py
+
+# Or run tests  
+.\.venv\Scripts\python.exe test_fastmcp_integration.py
 ```
 
 ### Alternative: Install with Docker (Recommended for Production)
@@ -81,30 +83,17 @@ uv run server.py
 
 ### Command Line Interface
 
-The server can be used directly from the command line for quick PowerShell operations:
+Test the server using the virtual environment:
 
 ```powershell
-# Run a PowerShell command
-python server.py run "Get-Process | Select-Object -First 5"
+# Navigate to project directory
+cd c:\codedev\mcp_servers\mcp-powershell-exec
 
-# Run a PowerShell command with JSON output
-python server.py format "Get-Process | Select-Object -First 5" --format json
+# Execute a PowerShell command directly
+.\.venv\Scripts\python.exe mcp_server.py --execute "Get-Date" --format json
 
-# Run a PowerShell script file
-python server.py script path/to/script.ps1 --args "arg1 arg2"
-
-# Get help on available commands
-python server.py --help
-```
-
-With UV:
-
-```powershell
-# Run a PowerShell command
-uv run server.py run "Get-Process | Select-Object -First 5"
-
-# Run a PowerShell command with JSON output
-uv run server.py format "Get-Process | Select-Object -First 5" --format json
+# Test command safety
+.\.venv\Scripts\python.exe test_fastmcp_integration.py
 ```
 
 ### Integration with GitHub Copilot in VSCode Insiders
@@ -123,21 +112,24 @@ To use this MCP server with GitHub Copilot in VSCode Insiders, follow these step
 
 1. **Configure MCP Server**
 
-   - Open .vscode/mcp.json
+   Add to your `claude_desktop_config.json`:
 
    ```json
    {
-     "servers": {
-       "powershell-integration": {
-         "command": "uv", // UV package manager for Python
-         "args": ["run", "drive:/yourpath/server.py"],
-         "env": {}
+     "mcpServers": {
+       "powershell-exec": {
+         "command": "C:\\codedev\\mcp_servers\\mcp-powershell-exec\\.venv\\Scripts\\python.exe",
+         "args": ["C:\\codedev\\mcp_servers\\mcp-powershell-exec\\mcp_server.py"],
+         "env": {
+           "MCP_PWSH_LOGGING__LOG_LEVEL": "INFO",
+           "MCP_PWSH_SECURITY__EXECUTION_POLICY": "RemoteSigned"
+         }
        }
      }
    }
    ```
 
-   Replace the path with the actual path to your `server.py` file.
+   Update the paths to match your actual installation location.
 
 1. **Enable Agent Mode**
    - Open Copilot chat in VSCode Insiders
