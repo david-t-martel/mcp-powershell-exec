@@ -11,8 +11,8 @@ if (-not (Test-Path $ActivateScript)) {
 # Activate the virtual environment
 & $ActivateScript
 
-Write-Host 'Virtual environment activated!'
-Write-Host 'To run the MCP server, use:'
-Write-Host '    python mcp_server.py'
-Write-Host '    - or -'
-Write-Host '    uv run mcp_server.py   (if UV is installed)'
+Write-Verbose 'Virtual environment activated!'
+Write-Verbose 'To run the MCP server, use:'
+Write-Verbose '    python mcp_server.py'
+Write-Verbose '    - or -'
+Write-Verbose '    uv run mcp_server.py   (if UV is installed)'

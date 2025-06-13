@@ -16,36 +16,39 @@
 <!-- omit in toc -->
 ## Table of Contents
 
-- [MCP Python SDK](#mcp-python-sdk)
-  - [Overview](#overview)
-  - [Installation](#installation)
-    - [Adding MCP to your python project](#adding-mcp-to-your-python-project)
-    - [Running the standalone MCP development tools](#running-the-standalone-mcp-development-tools)
-  - [Quickstart](#quickstart)
-  - [What is MCP?](#what-is-mcp)
-  - [Core Concepts](#core-concepts)
-    - [Server](#server)
-    - [Resources](#resources)
-    - [Tools](#tools)
-    - [Prompts](#prompts)
-    - [Images](#images)
-    - [Context](#context)
-  - [Running Your Server](#running-your-server)
-    - [Development Mode](#development-mode)
-    - [Claude Desktop Integration](#claude-desktop-integration)
-    - [Direct Execution](#direct-execution)
-    - [Mounting to an Existing ASGI Server](#mounting-to-an-existing-asgi-server)
-  - [Examples](#examples)
-    - [Echo Server](#echo-server)
-    - [SQLite Explorer](#sqlite-explorer)
-  - [Advanced Usage](#advanced-usage)
-    - [Low-Level Server](#low-level-server)
-    - [Writing MCP Clients](#writing-mcp-clients)
-    - [MCP Primitives](#mcp-primitives)
-    - [Server Capabilities](#server-capabilities)
-  - [Documentation](#documentation)
-  - [Contributing](#contributing)
-  - [License](#license)
+1. [MCP Python SDK](#mcp-python-sdk)
+   1. [Overview](#overview)
+   2. [Installation](#installation)
+      1. [Adding MCP to your python project](#adding-mcp-to-your-python-project)
+      2. [Running the standalone MCP development tools](#running-the-standalone-mcp-development-tools)
+   3. [Quickstart](#quickstart)
+   4. [What is MCP?](#what-is-mcp)
+   5. [Core Concepts](#core-concepts)
+      1. [Server](#server)
+      2. [Resources](#resources)
+      3. [Tools](#tools)
+      4. [Prompts](#prompts)
+      5. [Images](#images)
+      6. [Context](#context)
+      7. [Authentication](#authentication)
+   6. [Running Your Server](#running-your-server)
+      1. [Development Mode](#development-mode)
+      2. [Claude Desktop Integration](#claude-desktop-integration)
+      3. [Direct Execution](#direct-execution)
+      4. [Streamable HTTP Transport](#streamable-http-transport)
+      5. [Mounting to an Existing ASGI Server](#mounting-to-an-existing-asgi-server)
+   7. [Examples](#examples)
+      1. [Echo Server](#echo-server)
+      2. [SQLite Explorer](#sqlite-explorer)
+   8. [Advanced Usage](#advanced-usage)
+      1. [Low-Level Server](#low-level-server)
+      2. [Writing MCP Clients](#writing-mcp-clients)
+      3. [OAuth Authentication for Clients](#oauth-authentication-for-clients)
+      4. [MCP Primitives](#mcp-primitives)
+      5. [Server Capabilities](#server-capabilities)
+   9. [Documentation](#documentation)
+   10. [Contributing](#contributing)
+   11. [License](#license)
 
 [pypi-badge]: https://img.shields.io/pypi/v/mcp.svg
 [pypi-url]: https://pypi.org/project/mcp/
@@ -73,7 +76,7 @@ The Model Context Protocol allows applications to provide context for LLMs in a 
 
 ### Adding MCP to your python project
 
-We recommend using [uv](https://docs.astral.sh/uv/) to manage your Python projects. 
+We recommend using [uv](https://docs.astral.sh/uv/) to manage your Python projects.
 
 If you haven't created a uv-managed project yet, create one:
 
@@ -89,6 +92,7 @@ If you haven't created a uv-managed project yet, create one:
    ```
 
 Alternatively, for projects using pip for dependencies:
+
 ```bash
 pip install "mcp[cli]"
 ```
@@ -128,11 +132,13 @@ def get_greeting(name: str) -> str:
 ```
 
 You can install this server in [Claude Desktop](https://claude.ai/download) and interact with it right away by running:
+
 ```bash
 mcp install server.py
 ```
 
 Alternatively, you can test it with the MCP Inspector:
+
 ```bash
 mcp dev server.py
 ```
@@ -381,6 +387,7 @@ if __name__ == "__main__":
 ```
 
 Run it with:
+
 ```bash
 python server.py
 # or
@@ -458,17 +465,16 @@ app.mount("/math", math.mcp.streamable_http_app())
 ```
 
 For low level server with Streamable HTTP implementations, see:
+
 - Stateful server: [`examples/servers/simple-streamablehttp/`](examples/servers/simple-streamablehttp/)
 - Stateless server: [`examples/servers/simple-streamablehttp-stateless/`](examples/servers/simple-streamablehttp-stateless/)
 
-
-
 The streamable HTTP transport supports:
+
 - Stateful and stateless operation modes
 - Resumability with event stores
-- JSON or SSE response formats  
+- JSON or SSE response formats
 - Better scalability for multi-node deployments
-
 
 ### Mounting to an Existing ASGI Server
 
@@ -637,6 +643,7 @@ async def query_db(name: str, arguments: dict) -> list:
 ```
 
 The lifespan API provides:
+
 - A way to initialize resources when the server starts and clean them up when it stops
 - Access to initialized resources through the request context in handlers
 - Type-safe context passing between lifespan and request handlers
@@ -848,7 +855,6 @@ async def main():
 ```
 
 For a complete working example, see [`examples/clients/simple-auth-client/`](examples/clients/simple-auth-client/).
-
 
 ### MCP Primitives
 

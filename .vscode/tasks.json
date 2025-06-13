@@ -97,7 +97,7 @@
       "command": "pwsh.exe",
       "args": [
         "-NoProfile",
-        "-ExecutionPolicy", 
+        "-ExecutionPolicy",
         "Bypass",
         "-Command",
         "cd '${workspaceFolder}'; if (Test-Path '.venv/Scripts/black.exe') { .venv/Scripts/black.exe . } else { python -m black . }"
@@ -116,7 +116,7 @@
       "args": [
         "-NoProfile",
         "-ExecutionPolicy",
-        "Bypass", 
+        "Bypass",
         "-Command",
         "cd '${workspaceFolder}'; if (Test-Path '.venv/Scripts/flake8.exe') { .venv/Scripts/flake8.exe . } else { python -m flake8 . }"
       ],

@@ -14,8 +14,7 @@ import logging.handlers
 import os
 import sys
 from datetime import datetime
-from pathlib import Path
-from typing import Dict, Optional, Union, Any
+from typing import Dict, Optional, Any
 
 # Import config without creating circular dependency
 # We'll use the module's get_config() only when needed

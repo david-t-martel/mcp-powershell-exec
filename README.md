@@ -20,7 +20,7 @@ MCP PowerShell Exec Server is a lightweight server that accepts PowerShell scrip
 Clone the repository and set up the server:
 
 ```powershell
-git clone https://github.com/yourusername/mcp-powershell-exec.git
+git clone https://github.com/david-t-martel/mcp-powershell-exec.git
 cd mcp-powershell-exec
 ```
 
@@ -76,12 +76,6 @@ uv pip install -r requirements.txt
 # Run the server with UV
 uv run server.py
 ```
-
-## In Action
-
-Watch the video to see MCP PowerShell Exec Server in action:
-
-<a href="https://youtu.be/XmYaCJ0bNsE"><img src="https://img.youtube.com/vi/XmYaCJ0bNsE/0.jpg" width="600"/></a>
 
 ## Usage
 
@@ -176,6 +170,7 @@ MCP PowerShell Exec Server can be configured using:
    ```
 
 3. **Command-line arguments**:
+
    ```powershell
    python server.py --port 8080 --host 0.0.0.0 --log-level DEBUG
    ```
@@ -286,6 +281,7 @@ To enable authentication, update your configuration:
    ```
 
 2. **Using environment variables**:
+
    ```powershell
    $env:MCP_PWSH_SECURITY__REQUIRE_API_KEY = "true"
    $env:MCP_PWSH_SECURITY__API_KEYS = "key1,key2,key3"
